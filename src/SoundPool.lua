@@ -17,10 +17,10 @@ function SoundPool.new(o)
 
     setmetatable(self, {__index = SoundPool})
     return self
-}
+end
 
 -- Play a sound, optionally calling a pre-play callback first
-function SoundPool.play(sdata, cb)
+function SoundPool:play(sdata, cb)
     local sources = self.sources[sdata] or {}
 
     local source
