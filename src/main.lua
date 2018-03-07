@@ -9,13 +9,23 @@ setmetatable(_G, {
 })
 
 local cute = require('thirdparty.cute')
+local util = require('util')
 
 local bgm = {
     love.audio.newSource('sound/bgm1.ogg'),
     love.audio.newSource('sound/bgm2.ogg'),
 }
 
-local cat = love.graphics.newImage('gfx/cat.png')
+local cat = {
+    sprite = love.graphics.newImage('gfx/cat.png'),
+    angle = 0,
+    scale = 2,
+    cx = 8,
+    cy = 21,
+    x = 160,
+    y = 100,
+    ofsY = 0
+}
 
 function love.load(args)
     cute.go(args)
@@ -27,7 +37,16 @@ function love.load(args)
         music:play()
     end
 
-    cat:setFilter("nearest", "nearest")
+    cat.sprite:setFilter("nearest", "nearest")
+end
+
+function love.update(dt)
+    local phase = bgm[1]:tell()*64/bgm[1]:getDuration() + 0.1
+    local ta = ((math.floor(phase) % 2)*2 - 1)*.4
+
+    local ramp = util.smoothStep(math.min((phase % 1)*3, 1))
+    cat.angle = util.lerp(cat.angle, ta, ramp/2)
+    cat.ofsY = (ramp*(1-ramp))*10
 end
 
 function love.draw()
@@ -37,8 +56,5 @@ function love.draw()
     local scale = math.min(sw/320, sh/200)
     love.graphics.scale(scale)
 
-    local phase = math.floor(bgm[1]:tell()*64/bgm[1]:getDuration()) % 2
-    local angle = (phase*2 - 1)*.4
-    print(angle)
-    love.graphics.draw(cat, 160, 100, angle, 1, 1, 8, 24)
+    love.graphics.draw(cat.sprite, cat.x, cat.y - cat.ofsY, cat.angle, cat.scale, cat.scale, cat.cx, cat.cy)
 end
