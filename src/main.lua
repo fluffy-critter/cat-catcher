@@ -18,7 +18,7 @@ local bgm
 local cat = {
     sprite = love.graphics.newImage('gfx/cat.png'),
     angle = 0,
-    scale = 2,
+    scale = 1,
     cx = 8,
     cy = 21,
     x = 160,
@@ -90,7 +90,7 @@ function love.update(dt)
 
     local ramp = util.smoothStep(math.min((phase % 1)*2, 1))
     cat.angle = util.lerp(cat.angle, ta, ramp/2)
-    cat.ofsY = (ramp*(1-ramp))*64
+    cat.ofsY = (ramp*(1-ramp))*32
 
     if profiler then profiler.detach() end
 end
@@ -103,7 +103,8 @@ function love.draw()
     love.graphics.push()
 
     local sw, sh = love.graphics.getDimensions()
-    local scale = math.min(sw/320/1.25, sh/200/1.25)
+    local tw, th = 320*config.overscan, 200*config.overscan
+    local scale = math.min(sw/tw, sw/th)
     love.graphics.translate((sw - 320*scale)/2, (sh - 200*scale)/2)
     love.graphics.scale(scale)
 
@@ -111,7 +112,7 @@ function love.draw()
     love.graphics.rectangle("fill",0,0,320,200)
 
     love.graphics.setColor(255,255,255,255)
-    love.graphics.draw(cat.sprite, cat.x, cat.y - cat.ofsY, cat.angle, cat.scale, cat.scale, cat.cx, cat.cy)
+    love.graphics.draw(cat.sprite, cat.x, cat.y - cat.ofsY*cat.scale, cat.angle, cat.scale, cat.scale, cat.cx, cat.cy)
 
     love.graphics.pop()
 

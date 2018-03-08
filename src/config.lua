@@ -9,9 +9,12 @@ config.lua - default user configuration/persistent settings
 
 local util = require('util')
 
+local overscan = 1.1
+
 local config = {
-    width = 960,
-    height = 960*3/4,
+    overscan = overscan,
+    width = 320*overscan*3,
+    height = 240*overscan*3,
     vsync = true,
 }
 
