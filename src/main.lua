@@ -13,6 +13,9 @@ local util = require('util')
 local config = require('config')
 local profiler = config.profiler and require('profiler')
 
+local canvas
+local crtScaler = love.graphics.newShader('crtScaler.fs')
+
 local bgm
 
 local cat = {
@@ -98,23 +101,38 @@ end
 function love.draw()
     if profiler then profiler.attach("draw") end
 
-    love.graphics.clear(120,105,196,255)
-
-    love.graphics.push()
 
     local sw, sh = love.graphics.getDimensions()
+    if not canvas or canvas:getWidth() ~= sw or canvas:getHeight() ~= sh then
+        canvas = love.graphics.newCanvas(sw, sh)
+    end
+
     local tw, th = 320*config.overscan, 200*config.overscan
-    local scale = math.min(sw/tw, sw/th)
-    love.graphics.translate((sw - 320*scale)/2, (sh - 200*scale)/2)
-    love.graphics.scale(scale)
+    local scale = math.min(sw/tw, sh/th)
 
-    love.graphics.setColor(64,49,141,255)
-    love.graphics.rectangle("fill",0,0,320,200)
+    canvas:renderTo(function()
+        love.graphics.push()
 
-    love.graphics.setColor(255,255,255,255)
-    love.graphics.draw(cat.sprite, cat.x, cat.y - cat.ofsY*cat.scale, cat.angle, cat.scale, cat.scale, cat.cx, cat.cy)
+        love.graphics.setBlendMode("alpha", "alphamultiply")
+        love.graphics.clear(120,105,196,255)
 
-    love.graphics.pop()
+        love.graphics.translate((sw - 320*scale)/2, (sh - 200*scale)/2)
+        love.graphics.scale(scale)
+
+        love.graphics.setColor(64,49,141,255)
+        love.graphics.rectangle("fill",0,0,320,200)
+
+        love.graphics.setColor(255,255,255,255)
+        love.graphics.draw(cat.sprite, cat.x, cat.y - cat.ofsY*cat.scale, cat.angle, cat.scale, cat.scale, cat.cx, cat.cy)
+
+        love.graphics.pop()
+    end)
+
+    love.graphics.setShader(crtScaler)
+    crtScaler:send("screenSize", {tw, th})
+    crtScaler:send("outputSize", {sw, sh})
+    love.graphics.draw(canvas)
+    love.graphics.setShader()
 
     if profiler then
         profiler.detach()
