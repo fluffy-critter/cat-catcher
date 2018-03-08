@@ -15,6 +15,12 @@ local profiler = config.profiler and require('profiler')
 
 local bgm
 
+local screen = {
+    scale = 1,
+    ox = 0,
+    oy = 0
+}
+
 local cat = {
     sprite = love.graphics.newImage('gfx/cat.png'),
     angle = 0,
@@ -45,7 +51,7 @@ function love.load(args)
 
     for _,music in ipairs(bgm) do
         music:setLooping(true)
-        music:setVolume(1)
+        music:setVolume(0.1)
         music:play()
     end
 
@@ -100,21 +106,30 @@ function love.draw()
 
     love.graphics.clear(120,105,196,255)
 
-    love.graphics.push()
-
     local sw, sh = love.graphics.getDimensions()
     local tw, th = 320*config.overscan, 200*config.overscan
-    local scale = math.min(sw/tw, sw/th)
-    love.graphics.translate((sw - 320*scale)/2, (sh - 200*scale)/2)
-    love.graphics.scale(scale)
+    local scale = math.min(sw/tw, sh/th)
 
-    love.graphics.setColor(64,49,141,255)
-    love.graphics.rectangle("fill",0,0,320,200)
+    screen.w, screen.h = 320*scale, 200*scale
+    screen.x, screen.y = (sw - 320*scale)/2, (sh - 200*scale)/2
 
-    love.graphics.setColor(255,255,255,255)
-    love.graphics.draw(cat.sprite, cat.x, cat.y - cat.ofsY*cat.scale, cat.angle, cat.scale, cat.scale, cat.cx, cat.cy)
+    if not screen.canvas or screen.canvas:getWidth() ~= screen.w or screen.canvas:getHeight() ~= screen.h then
+        screen.canvas = love.graphics.newCanvas(screen.w, screen.h)
+    end
 
-    love.graphics.pop()
+    screen.canvas:renderTo(function()
+        love.graphics.clear(64,49,141,255)
+
+        love.graphics.push()
+        love.graphics.scale(scale)
+
+        love.graphics.setColor(255,255,255,255)
+        love.graphics.draw(cat.sprite, cat.x, cat.y - cat.ofsY*cat.scale, cat.angle, cat.scale, cat.scale, cat.cx, cat.cy)
+
+        love.graphics.pop()
+    end)
+
+    love.graphics.draw(screen.canvas, screen.x, screen.y)
 
     if profiler then
         profiler.detach()
