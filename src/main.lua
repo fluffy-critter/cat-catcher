@@ -10,6 +10,8 @@ setmetatable(_G, {
 
 local cute = require('thirdparty.cute')
 local util = require('util')
+local config = require('config')
+local profiler = config.profiler and require('profiler')
 
 local bgm
 
@@ -23,6 +25,13 @@ local cat = {
     y = 140,
     ofsY = 0
 }
+
+function love.keypressed(key)
+    if key == 'f' then
+        config.fullscreen = not love.window.getFullscreen()
+        love.window.setFullscreen(config.fullscreen)
+    end
+end
 
 function love.load(args)
     cute.go(args)
@@ -41,6 +50,15 @@ function love.load(args)
     end
 
     cat.sprite:setFilter("nearest", "nearest")
+
+    love.window.setMode(config.width, config.height, {
+        resizable = true,
+        fullscreen = config.fullscreen,
+        vsync = config.vsync,
+        highdpi = config.highdpi,
+        minwidth = 480,
+        minheight = 480
+    })
 end
 
 local time = 0
@@ -53,24 +71,53 @@ local function setSpeed(s)
     end
 end
 
+function love.resize(w, h)
+    print("resize " .. w .. ' ' .. h)
+    if not config.fullscreen then
+        config.width, config.height = love.window.getMode()
+        config.save()
+    end
+end
+
 function love.update(dt)
+    if profiler then profiler.attach("update", dt) end
+
     time = time + dt
     setSpeed(math.sin(time*.1)*0 + 1)
 
-    local phase = bgm[1]:tell()*64/bgm[1]:getDuration() + 0.1
+    local phase = bgm[1]:tell()*64/bgm[1]:getDuration() + 0.25
     local ta = ((math.floor(phase) % 2)*2 - 1)*.4
 
-    local ramp = util.smoothStep(math.min((phase % 1)*3, 1))
+    local ramp = util.smoothStep(math.min((phase % 1)*2, 1))
     cat.angle = util.lerp(cat.angle, ta, ramp/2)
-    cat.ofsY = (ramp*(1-ramp))*30
+    cat.ofsY = (ramp*(1-ramp))*64
+
+    if profiler then profiler.detach() end
 end
 
 function love.draw()
-    love.graphics.clear(0,0,0,255)
+    if profiler then profiler.attach("draw") end
+
+    love.graphics.clear(120,105,196,255)
+
+    love.graphics.push()
 
     local sw, sh = love.graphics.getDimensions()
-    local scale = math.min(sw/320, sh/200)
+    local scale = math.min(sw/360, sh/224)
+    love.graphics.translate((sw - 320*scale)/2, (sh - 200*scale)/2)
     love.graphics.scale(scale)
 
+    love.graphics.setColor(64,49,141,255)
+    love.graphics.rectangle("fill",0,0,320,200)
+
+    love.graphics.setColor(255,255,255,255)
     love.graphics.draw(cat.sprite, cat.x, cat.y - cat.ofsY, cat.angle, cat.scale, cat.scale, cat.cx, cat.cy)
+
+    love.graphics.pop()
+
+    if profiler then
+        profiler.detach()
+        profiler.draw()
+        profiler.attach("after")
+    end
 end
