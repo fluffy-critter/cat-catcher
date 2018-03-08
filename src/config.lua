@@ -10,8 +10,8 @@ config.lua - default user configuration/persistent settings
 local util = require('util')
 
 local config = {
-    width = 360*3,
-    height = 224*3,
+    width = 960,
+    height = 960*3/4,
     vsync = true,
 }
 

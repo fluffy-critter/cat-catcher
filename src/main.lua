@@ -103,7 +103,7 @@ function love.draw()
     love.graphics.push()
 
     local sw, sh = love.graphics.getDimensions()
-    local scale = math.min(sw/360, sh/224)
+    local scale = math.min(sw/320/1.25, sh/200/1.25)
     love.graphics.translate((sw - 320*scale)/2, (sh - 200*scale)/2)
     love.graphics.scale(scale)
 
