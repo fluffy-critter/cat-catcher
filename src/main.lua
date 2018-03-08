@@ -103,12 +103,15 @@ function love.draw()
 
 
     local sw, sh = love.graphics.getDimensions()
-    if not canvas or canvas:getWidth() ~= sw or canvas:getHeight() ~= sh then
-        canvas = love.graphics.newCanvas(sw, sh)
-    end
 
     local tw, th = 320*config.overscan, 200*config.overscan
     local scale = math.min(sw/tw, sh/th)
+    tw = sw/scale
+    th = sh/scale
+
+    if not canvas or canvas:getWidth() ~= tw or canvas:getHeight() ~= th then
+        canvas = love.graphics.newCanvas(tw, th)
+    end
 
     canvas:renderTo(function()
         love.graphics.push()
@@ -116,8 +119,7 @@ function love.draw()
         love.graphics.setBlendMode("alpha", "alphamultiply")
         love.graphics.clear(120,105,196,255)
 
-        love.graphics.translate((sw - 320*scale)/2, (sh - 200*scale)/2)
-        love.graphics.scale(scale)
+        love.graphics.translate((tw - 320)/2, (th - 200)/2)
 
         love.graphics.setColor(64,49,141,255)
         love.graphics.rectangle("fill",0,0,320,200)
@@ -129,9 +131,9 @@ function love.draw()
     end)
 
     love.graphics.setShader(crtScaler)
-    crtScaler:send("screenSize", {tw, th})
+    crtScaler:send("screenSize", {tw, th*2})
     crtScaler:send("outputSize", {sw, sh})
-    love.graphics.draw(canvas)
+    love.graphics.draw(canvas, 0, 0, 0, scale)
     love.graphics.setShader()
 
     if profiler then
