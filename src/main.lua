@@ -13,17 +13,23 @@ local util = require('util')
 local config = require('config')
 local profiler = config.profiler and require('profiler')
 
+local Cat = require('Cat')
+
 local bgm
+
+local maskShader = love.graphics.newShader('mask.fs')
 
 local cat = {
     sprite = love.graphics.newImage('gfx/cat.png'),
-    angle = 0,
+    angle = 0.4,
     scale = 2,
     cx = 8,
     cy = 21,
     x = 160,
     y = 140,
-    ofsY = 0
+    age = 0,
+    ofsY = 0,
+    fur = Cat.makeTexture()
 }
 
 function love.keypressed(key)
@@ -68,6 +74,7 @@ local function setSpeed(s)
     speed = s
     for _,music in ipairs(bgm) do
         music:setPitch(speed)
+        music:setVolume(0.2)
     end
 end
 
@@ -85,11 +92,17 @@ function love.update(dt)
     time = time + dt
     setSpeed(math.sin(time*.1)*0 + 1)
 
+    cat.age = cat.age + dt
+    if cat.age > 1 then
+        cat.fur = Cat.makeTexture()
+        cat.age = cat.age - 1
+    end
+
     local phase = bgm[1]:tell()*64/bgm[1]:getDuration() + 0.25
-    local ta = ((math.floor(phase) % 2)*2 - 1)*.4
+    local ta = ((math.floor(phase + 2) % 2)*2 - 1)*.4
 
     local ramp = util.smoothStep(math.min((phase % 1)*2, 1))
-    cat.angle = util.lerp(cat.angle, ta, ramp/2)
+    cat.angle = util.lerp(-ta, ta, util.smoothStep(ramp))
     cat.ofsY = (ramp*(1-ramp))*64
 
     if profiler then profiler.detach() end
@@ -98,7 +111,7 @@ end
 function love.draw()
     if profiler then profiler.attach("draw") end
 
-    love.graphics.clear(120,105,196,255)
+    love.graphics.clear(108,94,181)
 
     love.graphics.push()
 
@@ -107,11 +120,14 @@ function love.draw()
     love.graphics.translate((sw - 320*scale)/2, (sh - 200*scale)/2)
     love.graphics.scale(scale)
 
-    love.graphics.setColor(64,49,141,255)
+    love.graphics.setColor(53,40,121,255)
     love.graphics.rectangle("fill",0,0,320,200)
 
     love.graphics.setColor(255,255,255,255)
+    love.graphics.setShader(maskShader)
+    maskShader:send("fur", cat.fur)
     love.graphics.draw(cat.sprite, cat.x, cat.y - cat.ofsY, cat.angle, cat.scale, cat.scale, cat.cx, cat.cy)
+    love.graphics.setShader()
 
     love.graphics.pop()
 
