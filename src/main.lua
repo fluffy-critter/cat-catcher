@@ -17,6 +17,8 @@ local palette = require('palette')
 local Cat = require('Cat')
 local Paddle = require('Paddle')
 
+local BoostPellet = require('BoostPellet')
+
 local screen = {
     scale = 1,
     ox = 0,
@@ -33,7 +35,8 @@ local Game = {
         destH = 8,
         width = 320,
         height = 200
-    }
+    },
+    spawnTime = 10
 }
 
 function love.keypressed(key)
@@ -83,6 +86,17 @@ function love.load(args)
     Game.paddle = Paddle.new()
 
     Game.metronome = {}
+
+    Game.objects = {}
+    Game.items = {
+        BoostPellet
+    }
+end
+
+function Game:getSpawnLocation()
+    return math.random(0, self.arena.width/8 + 1)*8,
+        math.random(math.floor((self.arena.launchY + self.arena.launchH)/8),
+            math.floor(self.paddle.y/8) - 1)*8
 end
 
 local time = 0
@@ -113,12 +127,23 @@ function love.update(dt)
     time = time + dt
     setSpeed(math.sin(time*.1)*0 + 1)
 
+    Game.spawnTime = Game.spawnTime - dt*speed
+    if Game.spawnTime <= 0 then
+        print("spawmtime",Game.spawnTime)
+        table.insert(Game.objects, Game.items[math.random(#Game.items)].new({}, Game))
+        Game.spawnTime = math.random(5, 10)
+    end
+
     Game.metronome.beat = Game.bgm[1]:tell()*64/Game.bgm[1]:getDuration()
     Game.metronome.interval = Game.bgm[1]:getDuration()/64/speed
 
     Game.paddle:update(dt)
     util.runQueue(Game.cats, function(cat)
         return cat:update(dt, Game)
+    end)
+
+    util.runQueue(Game.objects, function(obj)
+        return obj:update(dt, Game)
     end)
 
     if profiler then profiler.detach() end
@@ -155,6 +180,9 @@ function love.draw()
         Game.paddle:draw()
         util.runQueue(Game.cats, function(cat)
             return cat:draw()
+        end)
+        util.runQueue(Game.objects, function(obj)
+            return obj:draw()
         end)
 
         love.graphics.pop()

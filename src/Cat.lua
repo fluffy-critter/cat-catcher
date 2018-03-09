@@ -141,6 +141,14 @@ function Cat:update(dt, game)
             end
         end
 
+        -- collect powerups!
+        util.runQueue(game.objects, function(obj)
+            if self:collidesWith(obj.x, obj.y, obj.w, obj.h) then
+                obj:onCollect(self)
+                return true
+            end
+        end)
+
         -- if it hits the walls, it bounces
         if ll < 0 then
             self.x = self.x + ll
@@ -170,7 +178,8 @@ function Cat:update(dt, game)
 
         -- left platform
         if self:collidesWith(0, game.arena.launchY, game.arena.launchX, game.arena.launchY + game.arena.launchH) then
-            if pl > game.arena.launchX and geom.spanOverlap(pt,pb,game.arena.launchY,game.arena.launchY+game.arena.launchH) then
+            if pl > game.arena.launchX
+            and geom.spanOverlap(pt,pb,game.arena.launchY,game.arena.launchY+game.arena.launchH) then
                 -- bounced off the side
                 print("bonk! launch")
                 self.x = game.arena.launchX + self.cx*self.scale
