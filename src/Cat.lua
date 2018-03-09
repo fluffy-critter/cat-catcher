@@ -8,6 +8,7 @@ local util = require('util')
 local imagepool = require('imagepool')
 local palette = require('palette')
 local config = require('config')
+local geom = require('geom')
 
 local Cat = {}
 
@@ -59,8 +60,9 @@ end
 
 function Cat:collidesWith(x, y, w, h)
     local cl, ct, cr, cb = self:getBounds()
+    local pl, pt, pr, pb = geom.xywh2ltrb(x,y,w,h)
 
-    return cr > x and cl < x + w and cb > y and ct < y + h
+    return geom.spanOverlap(cl,cr,pl,pr) and geom.spanOverlap(ct,cb,pt,pb)
 end
 
 function Cat:update(dt, game)
@@ -85,7 +87,7 @@ function Cat:update(dt, game)
             return true
         end
     elseif self.state == Cat.State.playing then
-        local pl, _, pr, _ = self:getBounds()
+        local pl, pt, pr, pb = self:getBounds()
 
         self.x = self.x + (self.vx + 0.5*self.ax*dt)*dt
         self.y = self.y + (self.vy + 0.5*self.ay*dt)*dt
@@ -116,16 +118,25 @@ function Cat:update(dt, game)
         end
 
         -- if it hits the paddle, it bounces
-        if self:collidesWith(game.paddle.x, game.paddle.y, game.paddle.w, game.paddle.h) and self.vy >= 0 then
-            -- TODO see if we bounced off the sides of the paddle instead of assuming the top
-            self.y = game.paddle.y
-            self.vy = -math.abs(self.vy)*game.paddle.elasticity
-            self.vx = self.vx + game.paddle.vx
+        if self:collidesWith(game.paddle.x, game.paddle.y, game.paddle.w, game.paddle.h) then
+            if geom.spanOverlap(pt,pb,game.paddle.y,game.paddle.y+game.paddle.h) then
+                -- we bounced off the side
+                if pr < game.paddle.x then
+                    self.vx = -math.abs(self.vx)
+                else
+                    self.vx = math.abs(self.vx)
+                end
+            elseif self.vy > 0 then
+                -- we bounced off the top
+                self.y = game.paddle.y
+                self.vy = -math.abs(self.vy)*game.paddle.elasticity
+                self.vx = self.vx + game.paddle.vx
+            end
         end
 
         -- left platform
         if self:collidesWith(0, game.arena.launchY, game.arena.launchX, game.arena.launchY + game.arena.launchH) then
-            if pl > game.arena.launchX and ll < game.arena.launchX then
+            if pl > game.arena.launchX and geom.spanOverlap(pt,pb,game.arena.launchY,game.arena.launchY+game.arena.launchH) then
                 -- bounced off the side
                 print("bonk! launch")
                 self.x = game.arena.launchX + self.cx*self.scale
@@ -146,7 +157,7 @@ function Cat:update(dt, game)
         -- right platform
         if self:collidesWith(game.arena.destX, game.arena.destY,
             game.arena.width - game.arena.destX, game.arena.destH) then
-            if pr < game.arena.destX and rr > game.arena.destX then
+            if pr < game.arena.destX and geom.spanOverlap(pt,pb,game.arena.destY,game.arena.destY+game.arena.destH) then
                 -- bounced off the side
                 print("bonk! dest")
                 self.x = game.arena.destX - self.cx*self.scale
