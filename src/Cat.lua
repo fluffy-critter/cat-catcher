@@ -7,6 +7,7 @@ Cats!
 local util = require('util')
 local imagepool = require('imagepool')
 local palette = require('palette')
+local config = require('config')
 
 local Cat = {}
 
@@ -25,6 +26,7 @@ function Cat.new(o)
         cx = 8,
         cy = 21,
         hitW = 16,
+        hitH = 11,
         vx = 0,
         vy = 0,
         ax = 0,
@@ -39,6 +41,28 @@ function Cat.new(o)
     return self
 end
 
+function Cat:getBounds()
+    local xl, xr
+    if self.dir < 0 then
+        xl = self.hitW
+        xr = self.cx
+    else
+        xl = self.cx
+        xr = self.hitW
+    end
+
+    return self.x - xl*self.scale,
+        self.y - self.hitH*self.scale,
+        self.x + xr*self.scale,
+        self.y
+end
+
+function Cat:collidesWith(x, y, w, h)
+    local cl, ct, cr, cb = self:getBounds()
+
+    return cr > x and cl < x + w and cb > y and ct < y + h
+end
+
 function Cat:update(dt, game)
     if self.state == Cat.State.ready or self.state == Cat.State.saved then
         -- Kittycat dance
@@ -51,14 +75,17 @@ function Cat:update(dt, game)
         self.ofsY = self.jump*bounce
         self.x = self.x + bounce*dt*self.vx
 
-        if self.state == Cat.State.ready and self.x > game.arena.launchX then
+        local ll = self:getBounds()
+        if self.state == Cat.State.ready and ll > game.arena.launchX then
+            self.y = self.y - self.ofsY
+            self.ofsY = 0
             self.state = Cat.State.playing
-        elseif self.state == Cat.State.saved and self.x - self.cx*self.scale > 320 then
+        elseif self.state == Cat.State.saved and ll > game.arena.width then
             print("byeeee!")
             return true
         end
     elseif self.state == Cat.State.playing then
-        self.ofsY = util.lerp(self.ofsY, 0, dt)
+        local pl, _, pr, _ = self:getBounds()
 
         self.x = self.x + (self.vx + 0.5*self.ax*dt)*dt
         self.y = self.y + (self.vy + 0.5*self.ay*dt)*dt
@@ -76,28 +103,66 @@ function Cat:update(dt, game)
             self.vx = -30
         end
 
+        local ll, _, rr, _ = self:getBounds()
+
+        -- if it hits the walls, it bounces
+        if ll < 0 then
+            self.x = self.x + ll
+            self.vx = math.abs(self.vx)
+        end
+        if rr > game.arena.width then
+            self.x = self.x - rr + game.arena.width
+            self.vx = -math.abs(self.vx)
+        end
+
         -- if it hits the paddle, it bounces
-        if self.y >= game.paddle.y and self.y <= game.paddle.y + game.paddle.h
-            and self.x + self.cx*self.scale >= game.paddle.x
-            and self.x - self.cx*self.scale <= game.paddle.x + game.paddle.w
-        then
+        if self:collidesWith(game.paddle.x, game.paddle.y, game.paddle.w, game.paddle.h) and self.vy >= 0 then
+            -- TODO see if we bounced off the sides of the paddle instead of assuming the top
             self.y = game.paddle.y
             self.vy = -math.abs(self.vy)*game.paddle.elasticity
             self.vx = self.vx + game.paddle.vx
         end
 
-        -- if it hits the walls, it bounces
-        if self.x - self.hitW*self.scale < 0 then
-            self.x = self.hitW*self.scale
-            self.vx = math.abs(self.vx)
-        end
-        if self.x + self.hitW*self.scale > game.arena.width then
-            self.x = game.arena.width - self.hitW*self.scale
-            self.vx = -math.abs(self.vx)
+        -- left platform
+        if self:collidesWith(0, game.arena.launchY, game.arena.launchX, game.arena.launchY + game.arena.launchH) then
+            if pl > game.arena.launchX and ll < game.arena.launchX then
+                -- bounced off the side
+                print("bonk! launch")
+                self.x = game.arena.launchX + self.cx*self.scale
+                self.vx = math.abs(self.vx)
+            elseif self.vy < 0 then
+                -- ouch, we hit our head
+                print("ouch! launch")
+                self.y = game.arena.launchY + game.arena.launchH + self.scale*self.hitH
+                self.vy = 0
+            else
+                -- we landed at the start! Neat!
+                self.vx = math.max(30, self.vx)
+                self.y = game.arena.launchY
+                self.state = Cat.State.ready
+            end
         end
 
-
-        -- TODO land on platform
+        -- right platform
+        if self:collidesWith(game.arena.destX, game.arena.destY,
+            game.arena.width - game.arena.destX, game.arena.destH) then
+            if pr < game.arena.destX and rr > game.arena.destX then
+                -- bounced off the side
+                print("bonk! dest")
+                self.x = game.arena.destX - self.cx*self.scale
+                self.vx = -math.abs(self.vx)
+            elseif self.vy < 0 then
+                -- we hit our head :(
+                print("ouch! dest")
+                self.y = game.arena.destY + game.arena.destH + self.scale*self.hitH
+                self.vy = 0
+            else
+                -- we landed! we are free!
+                self.vx = math.max(30, self.vx)
+                self.y = game.arena.destY
+                self.state = Cat.State.saved
+            end
+        end
     elseif self.state == Cat.State.lost then
         self.angle = math.sin(game.metronome.beat*math.pi)*.1
         self.x = self.x + self.vx*dt
@@ -120,6 +185,13 @@ function Cat:draw()
     love.graphics.setBlendMode("alpha", "alphamultiply")
     love.graphics.draw(self.sprite, self.x, self.y - self.ofsY*self.scale,
         self.angle, self.scale*self.dir, self.scale, self.cx, self.cy)
+
+    if config.debug then
+        local x, y, w, h = self:getBounds()
+        w = w - x
+        h = h - y
+        love.graphics.rectangle("line", x, y, w, h)
+    end
 end
 
 return Cat

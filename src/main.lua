@@ -27,8 +27,10 @@ local Game = {
     arena = {
         launchX = 32,
         launchY = 24,
+        launchH = 4,
         destX = 320 - 32,
-        destY = 32,
+        destY = 100,
+        destH = 8,
         width = 320,
         height = 200
     }
@@ -144,10 +146,10 @@ function love.draw()
         love.graphics.scale(scale)
 
         love.graphics.setColor(unpack(palette.lightred))
-        love.graphics.rectangle("fill", 0, Game.arena.launchY, Game.arena.launchX, 4)
+        love.graphics.rectangle("fill", 0, Game.arena.launchY, Game.arena.launchX, Game.arena.launchH)
         love.graphics.setColor(unpack(palette.lightgreen))
         love.graphics.rectangle("fill", Game.arena.destX, Game.arena.destY,
-            Game.arena.width - Game.arena.destX, 8)
+            Game.arena.width - Game.arena.destX, Game.arena.destH)
 
         Game.paddle:draw()
         util.runQueue(Game.cats, function(cat)

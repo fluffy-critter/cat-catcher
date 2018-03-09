@@ -18,7 +18,7 @@ function Paddle.new(o)
         w = 48,
         h = 4,
         y = 200 - 4 - 16,
-        vx = 40,
+        vx = 0,
         friction = 0.001,
         bounce = 0.05,
         elasticity = 0.95,
