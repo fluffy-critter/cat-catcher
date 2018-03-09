@@ -6,6 +6,7 @@ Cats!
 
 local util = require('util')
 local imagepool = require('imagepool')
+local palette = require('palette')
 
 local Cat = {}
 
@@ -18,7 +19,7 @@ function Cat.new(o)
     util.applyDefaults(self, {
         sprite = imagepool.load('gfx/cat.png', {nearest=true}),
         state = Cat.State.ready,
-        color = {255,255,255},
+        color = palette.white,
         scale = 1,
         angle = 0,
         cx = 8,
@@ -28,21 +29,22 @@ function Cat.new(o)
         ax = 0,
         ay = 30,
         age = 0,
+        dir = 1,
         points = 1,
-        jump = 16,
+        jump = 8,
         ofsY = 0
     })
 
     return self
 end
 
-function Cat:update(dt, metronome)
-    -- Kittycat dance
-    local phase = metronome.beat + 0.25
-    local ramp = util.smoothStep(math.min((phase % 1)*2, 1))
-    local bounce = ramp*(1 - ramp)*4
-
+function Cat:update(dt, Game)
     if self.state == Cat.State.ready or self.state == Cat.State.saved then
+        -- Kittycat dance
+        local phase = Game.metronome.beat + 0.25
+        local ramp = util.smoothStep(math.min((phase % 1)*2, 1))
+        local bounce = ramp*(1 - ramp)*4
+
         local ta = ((math.floor(phase) % 2)*2 - 1)*0.4
         self.angle = util.lerp(-ta, ta, ramp/2)
         self.ofsY = self.jump*bounce
@@ -71,7 +73,7 @@ function Cat:update(dt, metronome)
             self.vx = -30
         end
     elseif self.state == Cat.State.lost then
-        self.angle = math.sin(metronome.beat*math.pi)*.1
+        self.angle = math.sin(Game.metronome.beat*math.pi)*.1
         self.x = self.x + self.vx*dt
 
         if self.x + self.cx*self.scale < 0 then
@@ -79,13 +81,19 @@ function Cat:update(dt, metronome)
             return true
         end
     end
+
+    if self.vx > 0 then
+        dir = 1
+    elseif self.vx < 0 then
+        dir = -1
+    end
 end
 
 function Cat:draw()
     love.graphics.setColor(unpack(self.color))
     love.graphics.setBlendMode("alpha", "alphamultiply")
     love.graphics.draw(self.sprite, self.x, self.y - self.ofsY*self.scale,
-        self.angle, self.scale*(self.vx > 0 and 1 or -1), self.scale, self.cx, self.cy)
+        self.angle, self.scale*self.dir, self.scale, self.cx, self.cy)
 end
 
 return Cat

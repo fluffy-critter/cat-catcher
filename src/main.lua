@@ -12,10 +12,10 @@ local cute = require('thirdparty.cute')
 local util = require('util')
 local config = require('config')
 local profiler = config.profiler and require('profiler')
+local palette = require('palette')
 
 local Cat = require('Cat')
-
-local bgm
+local Paddle = require('Paddle')
 
 local screen = {
     scale = 1,
@@ -23,7 +23,7 @@ local screen = {
     oy = 0
 }
 
-local cats = {}
+local Game = {}
 
 function love.keypressed(key)
     if key == 'f' then
@@ -35,14 +35,16 @@ end
 function love.load(args)
     cute.go(args)
 
-    bgm = {
+    love.mouse.setRelativeMode(true)
+
+    Game.bgm = {
         love.audio.newSource('sound/bgm1.ogg'),
         -- love.audio.newSource('sound/bgm2.ogg'),
         -- love.audio.newSource('sound/bgm3.ogg'),
         love.audio.newSource('sound/bgm4.ogg'),
     }
 
-    for _,music in ipairs(bgm) do
+    for _,music in ipairs(Game.bgm) do
         music:setLooping(true)
         music:setVolume(0.1)
         music:play()
@@ -57,13 +59,18 @@ function love.load(args)
         minheight = 480
     })
 
-    table.insert(cats, Cat.new({
+    Game.cats = {}
+    table.insert(Game.cats, Cat.new({
         x = 160,
         y = 100,
-        vx = 30,
-        state = Cat.State.playing,
+        vx = 0,
+        state = Cat.State.ready,
         scale = 1
     }))
+
+    Game.paddle = Paddle.new()
+
+    Game.metronome = {}
 end
 
 local time = 0
@@ -71,7 +78,7 @@ local speed = 1
 
 local function setSpeed(s)
     speed = s
-    for _,music in ipairs(bgm) do
+    for _,music in ipairs(Game.bgm) do
         music:setPitch(speed)
     end
 end
@@ -90,12 +97,11 @@ function love.update(dt)
     time = time + dt
     setSpeed(math.sin(time*.1)*0 + 1)
 
-    local metronome = {
-        beat = bgm[1]:tell()*64/bgm[1]:getDuration()
-    }
+    Game.metronome.beat = Game.bgm[1]:tell()*64/Game.bgm[1]:getDuration()
 
-    util.runQueue(cats, function(cat)
-        return cat:update(dt, metronome)
+    Game.paddle:update(dt)
+    util.runQueue(Game.cats, function(cat)
+        return cat:update(dt, Game)
     end)
 
     if profiler then profiler.detach() end
@@ -104,7 +110,7 @@ end
 function love.draw()
     if profiler then profiler.attach("draw") end
 
-    love.graphics.clear(120,105,196,255)
+    love.graphics.clear(unpack(palette.lightblue))
 
     local sw, sh = love.graphics.getDimensions()
     local tw, th = 320*config.overscan, 200*config.overscan
@@ -118,18 +124,21 @@ function love.draw()
     end
 
     screen.canvas:renderTo(function()
-        love.graphics.clear(64,49,141,255)
+        love.graphics.clear(unpack(palette.blue))
 
         love.graphics.push()
         love.graphics.scale(scale)
 
-        util.runQueue(cats, function(cat)
+        Game.paddle:draw()
+        util.runQueue(Game.cats, function(cat)
             return cat:draw()
         end)
 
         love.graphics.pop()
     end)
 
+    love.graphics.setBlendMode("alpha", "premultiplied")
+    love.graphics.setColor(255,255,255)
     love.graphics.draw(screen.canvas, screen.x, screen.y)
 
     if profiler then
