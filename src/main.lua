@@ -23,7 +23,16 @@ local screen = {
     oy = 0
 }
 
-local Game = {}
+local Game = {
+    arena = {
+        launchX = 32,
+        launchY = 24,
+        destX = 320 - 32,
+        destY = 32,
+        width = 320,
+        height = 200
+    }
+}
 
 function love.keypressed(key)
     if key == 'f' then
@@ -62,9 +71,9 @@ function love.load(args)
 
     Game.cats = {}
     table.insert(Game.cats, Cat.new({
-        x = 160,
-        y = 100,
-        vx = 0,
+        x = -20,
+        y = 24,
+        vx = 30,
         state = Cat.State.ready,
         scale = 1
     }))
@@ -133,6 +142,12 @@ function love.draw()
 
         love.graphics.push()
         love.graphics.scale(scale)
+
+        love.graphics.setColor(unpack(palette.lightred))
+        love.graphics.rectangle("fill", 0, Game.arena.launchY, Game.arena.launchX, 4)
+        love.graphics.setColor(unpack(palette.lightgreen))
+        love.graphics.rectangle("fill", Game.arena.destX, Game.arena.destY,
+            Game.arena.width - Game.arena.destX, 8)
 
         Game.paddle:draw()
         util.runQueue(Game.cats, function(cat)

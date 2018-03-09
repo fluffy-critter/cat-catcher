@@ -24,10 +24,11 @@ function Cat.new(o)
         angle = 0,
         cx = 8,
         cy = 21,
+        hitW = 16,
         vx = 0,
         vy = 0,
         ax = 0,
-        ay = 30,
+        ay = 120,
         age = 0,
         dir = 1,
         points = 1,
@@ -38,10 +39,10 @@ function Cat.new(o)
     return self
 end
 
-function Cat:update(dt, Game)
+function Cat:update(dt, game)
     if self.state == Cat.State.ready or self.state == Cat.State.saved then
         -- Kittycat dance
-        local phase = Game.metronome.beat + 0.25
+        local phase = game.metronome.beat + 0.25
         local ramp = util.smoothStep(math.min((phase % 1)*2, 1))
         local bounce = ramp*(1 - ramp)*4
 
@@ -50,7 +51,9 @@ function Cat:update(dt, Game)
         self.ofsY = self.jump*bounce
         self.x = self.x + bounce*dt*self.vx
 
-        if self.x - self.cx*self.scale > 320 then
+        if self.state == Cat.State.ready and self.x > game.arena.launchX then
+            self.state = Cat.State.playing
+        elseif self.state == Cat.State.saved and self.x - self.cx*self.scale > 320 then
             print("byeeee!")
             return true
         end
@@ -66,14 +69,37 @@ function Cat:update(dt, Game)
         self.angle = 0 -- TODO
 
         -- if it hits the floor, it loses
-        if self.y >= 200 then
+        if self.y >= game.arena.height then
             self.vy = 0
             self.state = Cat.State.lost
-            self.y = 200
+            self.y = game.arena.height
             self.vx = -30
         end
+
+        -- if it hits the paddle, it bounces
+        if self.y >= game.paddle.y and self.y <= game.paddle.y + game.paddle.h
+            and self.x + self.cx*self.scale >= game.paddle.x
+            and self.x - self.cx*self.scale <= game.paddle.x + game.paddle.w
+        then
+            self.y = game.paddle.y
+            self.vy = -math.abs(self.vy)*game.paddle.elasticity
+            self.vx = self.vx + game.paddle.vx
+        end
+
+        -- if it hits the walls, it bounces
+        if self.x - self.hitW*self.scale < 0 then
+            self.x = self.hitW*self.scale
+            self.vx = math.abs(self.vx)
+        end
+        if self.x + self.hitW*self.scale > game.arena.width then
+            self.x = game.arena.width - self.hitW*self.scale
+            self.vx = -math.abs(self.vx)
+        end
+
+
+        -- TODO land on platform
     elseif self.state == Cat.State.lost then
-        self.angle = math.sin(Game.metronome.beat*math.pi)*.1
+        self.angle = math.sin(game.metronome.beat*math.pi)*.1
         self.x = self.x + self.vx*dt
 
         if self.x + self.cx*self.scale < 0 then
@@ -83,9 +109,9 @@ function Cat:update(dt, Game)
     end
 
     if self.vx > 0 then
-        dir = 1
+        self.dir = 1
     elseif self.vx < 0 then
-        dir = -1
+        self.dir = -1
     end
 end
 
