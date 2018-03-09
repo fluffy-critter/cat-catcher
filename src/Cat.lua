@@ -105,7 +105,41 @@ function Cat:update(dt, game)
             self.vx = -30
         end
 
-        local ll, _, rr, _ = self:getBounds()
+        local ll, _, rr, bb = self:getBounds()
+
+        -- try to synchronize the bouncing to the beat
+        local physicsBeat = math.floor(game.metronome.beat)
+        if bb < game.paddle.y and physicsBeat ~= self.lastPhysicsBeat then
+            self.lastPhysicsBeat = physicsBeat
+
+            -- p = y + vt + .5at^2
+            local nextHitDelta, nb = util.solveQuadratic(.5*self.ay, self.vy, self.y - game.paddle.y)
+            if not nextHitDelta or nextHitDelta < 0 or (nb and nb > 0 and nb < nextHitDelta) then
+                nextHitDelta = nb
+            end
+
+            local deltaBeats
+            if nextHitDelta then
+                local beatOfs = game.metronome.beat % 1
+                deltaBeats = nextHitDelta/game.metronome.interval
+
+                -- round this to the nearest beat, after taking off the beatOfs
+                deltaBeats = math.floor(deltaBeats + beatOfs + 0.25) - beatOfs
+            end
+
+            if deltaBeats and deltaBeats > .5 then
+                -- new time before next hit
+                local deltaTime = deltaBeats*game.metronome.interval
+
+                -- print("dt = " .. nextHitDelta .. " -> " .. deltaTime)
+
+                -- p = y + vt + .5at^2, solve for v
+                local vy = self.vy*.75 + .25*((game.paddle.y - self.y)/deltaTime - .5*self.ay*deltaTime)
+                if vy/self.vy < 1.5 then
+                    self.vy = vy
+                end
+            end
+        end
 
         -- if it hits the walls, it bounces
         if ll < 0 then

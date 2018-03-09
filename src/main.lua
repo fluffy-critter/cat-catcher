@@ -114,6 +114,7 @@ function love.update(dt)
     setSpeed(math.sin(time*.1)*0 + 1)
 
     Game.metronome.beat = Game.bgm[1]:tell()*64/Game.bgm[1]:getDuration()
+    Game.metronome.interval = Game.bgm[1]:getDuration()/64/speed
 
     Game.paddle:update(dt)
     util.runQueue(Game.cats, function(cat)
