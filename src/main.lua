@@ -29,6 +29,7 @@ function love.keypressed(key)
     if key == 'f' then
         config.fullscreen = not love.window.getFullscreen()
         love.window.setFullscreen(config.fullscreen)
+        config.save()
     end
 end
 
@@ -89,6 +90,10 @@ function love.resize(w, h)
         config.width, config.height = love.window.getMode()
         config.save()
     end
+end
+
+function love.mousemoved(_, _, dx, _)
+    Game.paddle:impulse(dx/screen.scale)
 end
 
 function love.update(dt)

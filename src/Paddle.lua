@@ -19,7 +19,7 @@ function Paddle.new(o)
         h = 4,
         y = 200 - 4 - 16,
         vx = 40,
-        friction = 0.5,
+        friction = 0.001,
         bounce = 0.05,
         color = palette.lightblue,
     })
@@ -27,9 +27,15 @@ function Paddle.new(o)
     return self
 end
 
+function Paddle:impulse(vx)
+    self.vx = self.vx + vx
+end
+
 function Paddle:update(dt)
-    self.vx = self.vx*math.pow(self.friction, dt)
+    -- TODO handle keyboard and/or joystick
+
     self.x = self.x + self.vx*dt
+    self.vx = self.vx*math.pow(self.friction, dt)
 
     if self.x < 0 then
         self.x = 0
