@@ -13,6 +13,8 @@ local util = require('util')
 local config = require('config')
 local profiler = config.profiler and require('profiler')
 
+local Cat = require('Cat')
+
 local bgm
 
 local screen = {
@@ -21,16 +23,7 @@ local screen = {
     oy = 0
 }
 
-local cat = {
-    sprite = love.graphics.newImage('gfx/cat.png'),
-    angle = 0,
-    scale = 1,
-    cx = 8,
-    cy = 21,
-    x = 160,
-    y = 140,
-    ofsY = 0
-}
+local cats = {}
 
 function love.keypressed(key)
     if key == 'f' then
@@ -55,8 +48,6 @@ function love.load(args)
         music:play()
     end
 
-    cat.sprite:setFilter("nearest", "nearest")
-
     love.window.setMode(config.width, config.height, {
         resizable = true,
         fullscreen = config.fullscreen,
@@ -65,6 +56,14 @@ function love.load(args)
         minwidth = 480,
         minheight = 480
     })
+
+    table.insert(cats, Cat.new({
+        x = 160,
+        y = 100,
+        vx = 30,
+        state = Cat.State.playing,
+        scale = 1
+    }))
 end
 
 local time = 0
@@ -91,12 +90,13 @@ function love.update(dt)
     time = time + dt
     setSpeed(math.sin(time*.1)*0 + 1)
 
-    local phase = bgm[1]:tell()*64/bgm[1]:getDuration() + 0.25
-    local ta = ((math.floor(phase) % 2)*2 - 1)*.4
+    local metronome = {
+        beat = bgm[1]:tell()*64/bgm[1]:getDuration()
+    }
 
-    local ramp = util.smoothStep(math.min((phase % 1)*2, 1))
-    cat.angle = util.lerp(cat.angle, ta, ramp/2)
-    cat.ofsY = (ramp*(1-ramp))*32
+    util.runQueue(cats, function(cat)
+        return cat:update(dt, metronome)
+    end)
 
     if profiler then profiler.detach() end
 end
@@ -110,8 +110,8 @@ function love.draw()
     local tw, th = 320*config.overscan, 200*config.overscan
     local scale = math.min(sw/tw, sh/th)
 
-    screen.w, screen.h = 320*scale, 200*scale
-    screen.x, screen.y = (sw - 320*scale)/2, (sh - 200*scale)/2
+    screen.w, screen.h = math.floor(320*scale), math.floor(200*scale)
+    screen.x, screen.y = (sw - screen.w)/2, (sh - screen.h)/2
 
     if not screen.canvas or screen.canvas:getWidth() ~= screen.w or screen.canvas:getHeight() ~= screen.h then
         screen.canvas = love.graphics.newCanvas(screen.w, screen.h)
@@ -123,8 +123,9 @@ function love.draw()
         love.graphics.push()
         love.graphics.scale(scale)
 
-        love.graphics.setColor(255,255,255,255)
-        love.graphics.draw(cat.sprite, cat.x, cat.y - cat.ofsY*cat.scale, cat.angle, cat.scale, cat.scale, cat.cx, cat.cy)
+        util.runQueue(cats, function(cat)
+            return cat:draw()
+        end)
 
         love.graphics.pop()
     end)
