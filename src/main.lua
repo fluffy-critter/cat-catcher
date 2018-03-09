@@ -13,6 +13,7 @@ local util = require('util')
 local config = require('config')
 local profiler = config.profiler and require('profiler')
 local palette = require('palette')
+local font = love.graphics.newFont('c64-pro-mono.ttf', 8)
 
 local Cat = require('Cat')
 local Paddle = require('Paddle')
@@ -22,7 +23,7 @@ local BoostPellet = require('BoostPellet')
 local screen = {
     scale = 1,
     ox = 0,
-    oy = 0
+    oy = 0,
 }
 
 local Game = {
@@ -36,7 +37,11 @@ local Game = {
         width = 320,
         height = 200
     },
-    spawnTime = 10
+    spawnTime = 10,
+    catInterval = 7,
+    lives = 9,
+    score = 0,
+    nextCat = 10
 }
 
 function love.keypressed(key)
@@ -55,7 +60,7 @@ function love.load(args)
     Game.bgm = {
         love.audio.newSource('sound/bgm1.ogg'),
         -- love.audio.newSource('sound/bgm2.ogg'),
-        -- love.audio.newSource('sound/bgm3.ogg'),
+        love.audio.newSource('sound/bgm3.ogg'),
         love.audio.newSource('sound/bgm4.ogg'),
     }
 
@@ -74,15 +79,13 @@ function love.load(args)
         minheight = 480
     })
 
-    Game.cats = {}
-    table.insert(Game.cats, Cat.new({
+    Game.cats = {Cat.new({
+        color = palette.white,
+        scale = 1,
         x = -20,
         y = 24,
         vx = 30,
-        state = Cat.State.ready,
-        scale = 1
-    }))
-
+    })}
     Game.paddle = Paddle.new()
 
     Game.metronome = {}
@@ -91,6 +94,9 @@ function love.load(args)
     Game.items = {
         BoostPellet
     }
+
+    screen.textLayer = love.graphics.newCanvas(320, 200)
+    screen.textLayer:setFilter("nearest")
 end
 
 function Game:getSpawnLocation()
@@ -134,6 +140,17 @@ function love.update(dt)
         Game.spawnTime = math.random(5, 10)
     end
 
+    Game.nextCat = (Game.nextCat or 0) - dt*speed
+    if Game.nextCat <= 0 then
+        table.insert(Game.cats, Cat.new({
+            x = -20,
+            y = 24,
+            vx = 40,
+            state = Cat.State.ready,
+        }))
+        Game.nextCat = Game.catInterval
+    end
+
     Game.metronome.beat = Game.bgm[1]:tell()*64/Game.bgm[1]:getDuration()
     Game.metronome.interval = Game.bgm[1]:getDuration()/64/speed
 
@@ -165,11 +182,37 @@ function love.draw()
         screen.canvas = love.graphics.newCanvas(screen.w, screen.h)
     end
 
+    screen.textLayer:renderTo(function()
+        love.graphics.clear(0,0,0,0)
+
+        love.graphics.setBlendMode("alpha", "alphamultiply")
+
+        if config.debug then
+            love.graphics.setColor(palette.black)
+            for x = 0,320,8 do
+                love.graphics.line(x, 0, x, 200)
+            end
+            for y = 0,200,8 do
+                love.graphics.line(0, y, 320, y)
+            end
+        end
+
+        love.graphics.setFont(font)
+        love.graphics.setColor(palette.white)
+        love.graphics.print('Score: ' .. Game.score, 0, 1)
+        love.graphics.setColor(palette.lightred)
+        love.graphics.printf('Lives: ' .. Game.lives, 0, 1, 320, "right")
+    end)
+
     screen.canvas:renderTo(function()
         love.graphics.clear(unpack(palette.blue))
 
         love.graphics.push()
         love.graphics.scale(scale)
+
+        love.graphics.setColor(255,255,255)
+        love.graphics.setBlendMode("alpha", "premultiplied")
+        love.graphics.draw(screen.textLayer)
 
         love.graphics.setColor(unpack(palette.lightred))
         love.graphics.rectangle("fill", 0, Game.arena.launchY, Game.arena.launchX, Game.arena.launchH)

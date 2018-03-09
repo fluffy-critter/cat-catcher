@@ -21,7 +21,6 @@ function Paddle.new(o)
         vx = 0,
         friction = 0.001,
         bounce = 0.05,
-        elasticity = 0.95,
         color = palette.lightblue,
     })
 

@@ -13,6 +13,7 @@ local geom = require('geom')
 local Cat = {}
 
 Cat.State = util.enum("ready", "playing", "saved", "lost")
+Cat.Colors = {palette.white, palette.lightblue, palette.lightred, palette.yellow, palette.gray3}
 
 function Cat.new(o)
     local self = o or {}
@@ -21,8 +22,8 @@ function Cat.new(o)
     util.applyDefaults(self, {
         sprite = imagepool.load('gfx/cat.png', {nearest=true}),
         state = Cat.State.ready,
-        color = palette.white,
-        scale = 1,
+        color = Cat.Colors[math.random(#Cat.Colors)],
+        scale = math.random(3)*0.5,
         angle = 0,
         cx = 8,
         cy = 21,
@@ -36,7 +37,8 @@ function Cat.new(o)
         dir = 1,
         points = 1,
         jump = 8,
-        ofsY = 0
+        ofsY = 0,
+        bounce = 0.98
     })
 
     return self
@@ -105,7 +107,7 @@ function Cat:update(dt, game)
             self.vx = -30
         end
 
-        local ll, _, rr, bb = self:getBounds()
+        local ll, tt, rr, bb = self:getBounds()
 
         -- try to synchronize the bouncing to the beat
         local physicsBeat = math.floor(game.metronome.beat)
@@ -165,13 +167,15 @@ function Cat:update(dt, game)
                 -- we bounced off the side
                 if pr < game.paddle.x then
                     self.vx = -math.abs(self.vx)
+                    self.x = self.x - rr + game.paddle.x
                 else
                     self.vx = math.abs(self.vx)
+                    self.x = self.x + ll - game.paddle.w - game.paddle.x
                 end
             elseif self.vy > 0 then
                 -- we bounced off the top
                 self.y = game.paddle.y
-                self.vy = -math.abs(self.vy)*game.paddle.elasticity
+                self.vy = -math.abs(self.vy)*self.bounce
                 self.vx = self.vx + game.paddle.vx
             end
         end
@@ -182,13 +186,13 @@ function Cat:update(dt, game)
             and geom.spanOverlap(pt,pb,game.arena.launchY,game.arena.launchY+game.arena.launchH) then
                 -- bounced off the side
                 print("bonk! launch")
-                self.x = game.arena.launchX + self.cx*self.scale
+                self.x = self.x + ll - game.arena.launchX
                 self.vx = math.abs(self.vx)
             elseif self.vy < 0 then
                 -- ouch, we hit our head
                 print("ouch! launch")
-                self.y = game.arena.launchY + game.arena.launchH + self.scale*self.hitH
-                self.vy = 0
+                self.y = self.y + (game.arena.launchY + game.arena.launchH - tt)
+                self.vy = math.abs(self.vy)
             else
                 -- we landed at the start! Neat!
                 self.vx = math.max(30, self.vx)
@@ -203,13 +207,13 @@ function Cat:update(dt, game)
             if pr < game.arena.destX and geom.spanOverlap(pt,pb,game.arena.destY,game.arena.destY+game.arena.destH) then
                 -- bounced off the side
                 print("bonk! dest")
-                self.x = game.arena.destX - self.cx*self.scale
+                self.x = self.x - rr + game.arena.destX
                 self.vx = -math.abs(self.vx)
             elseif self.vy < 0 then
                 -- we hit our head :(
                 print("ouch! dest")
-                self.y = game.arena.destY + game.arena.destH + self.scale*self.hitH
-                self.vy = 0
+                self.y = self.y + (game.arena.destY + game.arena.destH - tt)
+                self.vy = math.abs(self.vy)
             else
                 -- we landed! we are free!
                 self.vx = math.max(30, self.vx)
