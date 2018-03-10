@@ -105,43 +105,10 @@ function Cat:update(dt, game)
             self.state = Cat.State.lost
             self.y = game.arena.height
             self.vx = -30
+            game.lives = math.max(0, game.lives - 1)
         end
 
         local ll, tt, rr, bb = self:getBounds()
-
-        -- try to synchronize the bouncing to the beat
-        local physicsBeat = math.floor(game.metronome.beat)
-        if bb < game.paddle.y and physicsBeat ~= self.lastPhysicsBeat then
-            self.lastPhysicsBeat = physicsBeat
-
-            -- p = y + vt + .5at^2
-            local nextHitDelta, nb = util.solveQuadratic(.5*self.ay, self.vy, self.y - game.paddle.y)
-            if not nextHitDelta or nextHitDelta < 0 or (nb and nb > 0 and nb < nextHitDelta) then
-                nextHitDelta = nb
-            end
-
-            local deltaBeats
-            if nextHitDelta then
-                local beatOfs = game.metronome.beat % 1
-                deltaBeats = nextHitDelta/game.metronome.interval
-
-                -- round this to the nearest beat, after taking off the beatOfs
-                deltaBeats = math.floor(deltaBeats + beatOfs + 0.25) - beatOfs
-            end
-
-            if deltaBeats and deltaBeats > .5 then
-                -- new time before next hit
-                local deltaTime = deltaBeats*game.metronome.interval
-
-                -- print("dt = " .. nextHitDelta .. " -> " .. deltaTime)
-
-                -- p = y + vt + .5at^2, solve for v
-                local vy = self.vy*.75 + .25*((game.paddle.y - self.y)/deltaTime - .5*self.ay*deltaTime)
-                if vy/self.vy < 1.5 then
-                    self.vy = vy
-                end
-            end
-        end
 
         -- collect powerups!
         util.runQueue(game.objects, function(obj)
@@ -177,27 +144,6 @@ function Cat:update(dt, game)
                 self.y = game.paddle.y
                 self.vy = -math.abs(self.vy)*self.bounce
                 self.vx = self.vx + game.paddle.vx
-            end
-        end
-
-        -- left platform
-        if self:collidesWith(0, game.arena.launchY, game.arena.launchX, game.arena.launchY + game.arena.launchH) then
-            if pl > game.arena.launchX
-            and geom.spanOverlap(pt,pb,game.arena.launchY,game.arena.launchY+game.arena.launchH) then
-                -- bounced off the side
-                print("bonk! launch")
-                self.x = self.x + ll - game.arena.launchX
-                self.vx = math.abs(self.vx)
-            elseif self.vy < 0 then
-                -- ouch, we hit our head
-                print("ouch! launch")
-                self.y = self.y + (game.arena.launchY + game.arena.launchH - tt)
-                self.vy = math.abs(self.vy)
-            else
-                -- we landed at the start! Neat!
-                self.vx = math.max(30, self.vx)
-                self.y = game.arena.launchY
-                self.state = Cat.State.ready
             end
         end
 

@@ -42,7 +42,7 @@ local Game = {
     lives = 9,
     score = 0,
     highscore = 0,
-    level = 3
+    level = 0
 }
 
 function love.keypressed(key)
@@ -67,7 +67,7 @@ function love.load(args)
 
     for _,music in ipairs(Game.bgm) do
         music:setLooping(true)
-        music:setVolume(0.1)
+        -- music:setVolume(0.1)
         music:play()
     end
 
@@ -146,7 +146,7 @@ function love.update(dt)
             vx = 30 + Game.level,
         }))
 
-        for i = 2,Game.level do
+        for i = 2,math.min(Game.level, Game.lives) do
             table.insert(Game.cats, Cat.new({
                 scale = 0.5,
                 x = -10 - 14*i,
