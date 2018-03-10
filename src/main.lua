@@ -26,8 +26,6 @@ local screen = {
     oy = 0,
 }
 
-local States = util.enum("intro", "playing")
-
 local Game = {
     arena = {
         launchX = 32,
@@ -46,6 +44,12 @@ local Game = {
     nextLife = 1000,
     levelDisplayTime = 0
 }
+
+local function setSpeed(speed)
+    for _,music in ipairs(Game.bgm) do
+        music:setPitch(speed)
+    end
+end
 
 function love.keypressed(key)
     if key == 'f' then
@@ -96,18 +100,14 @@ function love.load(args)
 
     screen.textLayer = love.graphics.newCanvas(320, 200)
     screen.textLayer:setFilter("nearest")
+
+    setSpeed(1)
 end
 
 function Game:getSpawnLocation()
     return math.random(0, self.arena.width/8 + 1)*8,
         math.random(math.floor((self.arena.launchY + self.arena.launchH)/8),
             math.floor(self.paddle.y/8) - 1)*8
-end
-
-local function setSpeed(speed)
-    for _,music in ipairs(Game.bgm) do
-        music:setPitch(speed)
-    end
 end
 
 function love.resize(w, h)

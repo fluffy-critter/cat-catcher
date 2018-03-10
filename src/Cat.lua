@@ -93,7 +93,7 @@ function Cat:update(dt, game)
             return true
         end
     elseif self.state == Cat.State.playing then
-        local pl, pt, pr, pb = self:getBounds()
+        local _, pt, pr, pb = self:getBounds()
 
         self.x = self.x + (self.vx + 0.5*self.ax*dt)*dt
         self.y = self.y + (self.vy + 0.5*self.ay*dt)*dt
@@ -113,7 +113,7 @@ function Cat:update(dt, game)
 
         end
 
-        local ll, tt, rr, bb = self:getBounds()
+        local ll, tt, rr, _ = self:getBounds()
 
         -- collect powerups!
         util.runQueue(game.objects, function(obj)
