@@ -41,7 +41,8 @@ local Game = {
     catInterval = 7,
     lives = 9,
     score = 0,
-    nextCat = 10
+    highscore = 0,
+    level = 3
 }
 
 function love.keypressed(key)
@@ -79,13 +80,7 @@ function love.load(args)
         minheight = 480
     })
 
-    Game.cats = {Cat.new({
-        color = palette.white,
-        scale = 1,
-        x = -20,
-        y = 24,
-        vx = 30,
-    })}
+    Game.cats = {}
     Game.paddle = Paddle.new()
 
     Game.metronome = {}
@@ -140,15 +135,25 @@ function love.update(dt)
         Game.spawnTime = math.random(5, 10)
     end
 
-    Game.nextCat = (Game.nextCat or 0) - dt*speed
-    if Game.nextCat <= 0 then
+    if #Game.cats == 0 and Game.lives > 0 then
+        Game.level = Game.level + 1
+
         table.insert(Game.cats, Cat.new({
+            color = Game.level == 1 and palette.white or nil,
+            scale = 1,
             x = -20,
             y = 24,
-            vx = 40,
-            state = Cat.State.ready,
+            vx = 30 + Game.level,
         }))
-        Game.nextCat = Game.catInterval
+
+        for i = 2,Game.level do
+            table.insert(Game.cats, Cat.new({
+                scale = 0.5,
+                x = -10 - 14*i,
+                y = 24,
+                vx = 30 + Game.level
+            }))
+        end
     end
 
     Game.metronome.beat = Game.bgm[1]:tell()*64/Game.bgm[1]:getDuration()
@@ -202,6 +207,8 @@ function love.draw()
         love.graphics.print('Score: ' .. Game.score, 0, 1)
         love.graphics.setColor(palette.lightred)
         love.graphics.printf('Lives: ' .. Game.lives, 0, 1, 320, "right")
+        love.graphics.setColor(palette.yellow)
+        love.graphics.printf('Level ' .. Game.level, 0, 101, 320, "center")
     end)
 
     screen.canvas:renderTo(function()
