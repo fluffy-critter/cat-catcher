@@ -38,11 +38,11 @@ local Game = {
         height = 200
     },
     spawnTime = 10,
-    catInterval = 7,
     lives = 9,
     score = 0,
-    highscore = 0,
-    level = 0
+    level = 0,
+    nextLife = 1000,
+    levelDisplayTime = 0
 }
 
 function love.keypressed(key)
@@ -61,7 +61,7 @@ function love.load(args)
     Game.bgm = {
         love.audio.newSource('sound/bgm1.ogg'),
         -- love.audio.newSource('sound/bgm2.ogg'),
-        love.audio.newSource('sound/bgm3.ogg'),
+        -- love.audio.newSource('sound/bgm3.ogg'),
         love.audio.newSource('sound/bgm4.ogg'),
     }
 
@@ -90,6 +90,8 @@ function love.load(args)
         BoostPellet
     }
 
+    Game.effects = {}
+
     screen.textLayer = love.graphics.newCanvas(320, 200)
     screen.textLayer:setFilter("nearest")
 end
@@ -100,11 +102,7 @@ function Game:getSpawnLocation()
             math.floor(self.paddle.y/8) - 1)*8
 end
 
-local time = 0
-local speed = 1
-
-local function setSpeed(s)
-    speed = s
+local function setSpeed(speed)
     for _,music in ipairs(Game.bgm) do
         music:setPitch(speed)
     end
@@ -125,10 +123,12 @@ end
 function love.update(dt)
     if profiler then profiler.attach("update", dt) end
 
-    time = time + dt
-    setSpeed(math.sin(time*.1)*0 + 1)
+    Game.metronome.beat = Game.bgm[1]:tell()*64/Game.bgm[1]:getDuration()
+    Game.metronome.interval = Game.bgm[1]:getDuration()/64/Game.bgm[1]:getPitch()
 
-    Game.spawnTime = Game.spawnTime - dt*speed
+    Game.levelDisplayTime = Game.levelDisplayTime - dt
+
+    Game.spawnTime = Game.spawnTime - dt
     if Game.spawnTime <= 0 then
         print("spawmtime",Game.spawnTime)
         table.insert(Game.objects, Game.items[math.random(#Game.items)].new({}, Game))
@@ -137,6 +137,11 @@ function love.update(dt)
 
     if #Game.cats == 0 and Game.lives > 0 then
         Game.level = Game.level + 1
+        Game.levelDisplayTime = Game.metronome.interval*(8 - (Game.metronome.beat % 4))
+
+        if Game.lives < 9 then
+            Game.lives = Game.lives + 1
+        end
 
         table.insert(Game.cats, Cat.new({
             color = Game.level == 1 and palette.white or nil,
@@ -156,8 +161,9 @@ function love.update(dt)
         end
     end
 
-    Game.metronome.beat = Game.bgm[1]:tell()*64/Game.bgm[1]:getDuration()
-    Game.metronome.interval = Game.bgm[1]:getDuration()/64/speed
+    util.runQueue(Game.effects, function(effect)
+        return effect:update(dt)
+    end)
 
     Game.paddle:update(dt)
     util.runQueue(Game.cats, function(cat)
@@ -167,6 +173,16 @@ function love.update(dt)
     util.runQueue(Game.objects, function(obj)
         return obj:update(dt, Game)
     end)
+
+    if Game.score >= Game.nextLife then
+        Game.lives = Game.lives + 1
+        Game.nextLife = Game.nextLife + 1000
+    end
+
+    if not config.highscore or Game.score > config.highscore then
+        config.highscore = Game.score
+        config.save()
+    end
 
     if profiler then profiler.detach() end
 end
@@ -207,8 +223,15 @@ function love.draw()
         love.graphics.print('Score: ' .. Game.score, 0, 1)
         love.graphics.setColor(palette.lightred)
         love.graphics.printf('Lives: ' .. Game.lives, 0, 1, 320, "right")
-        love.graphics.setColor(palette.yellow)
-        love.graphics.printf('Level ' .. Game.level, 0, 101, 320, "center")
+
+        if Game.levelDisplayTime > 0 then
+            love.graphics.setColor(palette.yellow)
+            love.graphics.printf('Level ' .. Game.level, 0, 101, 320, "center")
+        elseif Game.lives == 0 then
+            love.graphics.setColor(palette.cyan)
+            love.graphics.printf('Game Over', 0, 101, 320, "center")
+            love.graphics.printf("High Score: " .. config.highscore, 0, 109, 320, "center")
+        end
     end)
 
     screen.canvas:renderTo(function()

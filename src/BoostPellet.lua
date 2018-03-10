@@ -23,7 +23,7 @@ function BoostPellet.new(o, Game)
         item = items.booster,
         color = palette.yellow,
         lifetime = math.random(5,15),
-        strength = math.random(100,200)
+        strength = math.random(50,100)
     })
 
     return self
@@ -35,7 +35,7 @@ function BoostPellet:update(dt)
 end
 
 function BoostPellet:onCollect(cat)
-    cat.vy = -self.strength
+    cat.vy = math.min(cat.vy, 0) - self.strength
 end
 
 function BoostPellet:draw()

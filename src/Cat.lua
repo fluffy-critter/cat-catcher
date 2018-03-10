@@ -74,7 +74,7 @@ function Cat:update(dt, game)
         local ramp = util.smoothStep(math.min((phase % 1)*2, 1))
         local bounce = ramp*(1 - ramp)*4
 
-        local ta = ((math.floor(phase) % 2)*2 - 1)*0.4
+        local ta = ((math.floor(phase + 1) % 2)*2 - 1)*0.4
         self.angle = util.lerp(-ta, ta, ramp/2)
         self.ofsY = self.jump*bounce
         self.x = self.x + bounce*dt*self.vx
@@ -104,8 +104,9 @@ function Cat:update(dt, game)
             self.vy = 0
             self.state = Cat.State.lost
             self.y = game.arena.height
-            self.vx = -30
+            self.vx = math.min(-30, -math.abs(self.vx))
             game.lives = math.max(0, game.lives - 1)
+
         end
 
         local ll, tt, rr, bb = self:getBounds()
@@ -144,6 +145,9 @@ function Cat:update(dt, game)
                 self.y = game.paddle.y
                 self.vy = -math.abs(self.vy)*self.bounce
                 self.vx = self.vx + game.paddle.vx
+
+                game.score = game.score + self.points
+                self.points = self.points + 1
             end
         end
 
@@ -165,6 +169,7 @@ function Cat:update(dt, game)
                 self.vx = math.max(30, self.vx)
                 self.y = game.arena.destY
                 self.state = Cat.State.saved
+                game.score = game.score + 10*self.points + 100
             end
         end
     elseif self.state == Cat.State.lost then
