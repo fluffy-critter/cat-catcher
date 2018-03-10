@@ -174,7 +174,7 @@ function love.update(dt)
         for _,cat in ipairs(newCats) do
             cat.x = 0
             local ll, _, rr = cat:getBounds()
-            local ofs = x - rr - 2
+            local ofs = x - rr - 5
             cat.x = ofs
             x = ll + ofs
             table.insert(Game.cats, cat)

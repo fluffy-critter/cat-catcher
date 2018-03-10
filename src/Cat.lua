@@ -27,8 +27,9 @@ function Cat.new(o)
         angle = 0,
         cx = 8,
         cy = 21,
-        hitW = 16,
+        hitF = 10,
         hitH = 11,
+        hitB = 8,
         vx = 0,
         vy = 0,
         ax = 0,
@@ -47,11 +48,11 @@ end
 function Cat:getBounds()
     local xl, xr
     if self.dir < 0 then
-        xl = self.hitW
-        xr = self.cx
+        xl = self.hitF
+        xr = self.hitB
     else
-        xl = self.cx
-        xr = self.hitW
+        xl = self.hitB
+        xr = self.hitF
     end
 
     return self.x - xl*self.scale,
@@ -82,6 +83,12 @@ function Cat:update(dt, game)
         self.angle = util.lerp(-ta, ta, ramp/2)
         self.ofsY = self.jump*bounce
         self.x = self.x + bounce*dt*self.vx
+
+        if self.state == Cat.State.ready then
+            self.y = game.arena.launchY
+        elseif self.state == Cat.State.saved then
+            self.y = game.arena.destY
+        end
 
         local ll = self:getBounds()
         if self.state == Cat.State.ready and ll > game.arena.launchX then
