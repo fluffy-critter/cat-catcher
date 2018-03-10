@@ -26,6 +26,8 @@ local screen = {
     oy = 0,
 }
 
+local States = util.enum("intro", "playing")
+
 local Game = {
     arena = {
         launchX = 32,
@@ -135,7 +137,14 @@ function love.update(dt)
         Game.spawnTime = math.random(5, 10)
     end
 
-    if #Game.cats == 0 and Game.lives > 0 then
+    local catCount = 0
+    for _,cat in ipairs(Game.cats) do
+        if cat:active() then
+            catCount = catCount + 1
+        end
+    end
+
+    if catCount == 0 and Game.lives > 0 then
         Game.level = Game.level + 1
         Game.levelDisplayTime = Game.metronome.interval*(8 - (Game.metronome.beat % 4))
 
@@ -143,21 +152,32 @@ function love.update(dt)
             Game.lives = Game.lives + 1
         end
 
-        table.insert(Game.cats, Cat.new({
+        local newCats = {}
+        table.insert(newCats, Cat.new({
             color = Game.level == 1 and palette.white or nil,
             scale = 1,
-            x = -20,
-            y = 24,
+            y = Game.arena.launchY,
             vx = 30 + Game.level,
         }))
 
-        for i = 2,math.min(Game.level, Game.lives) do
-            table.insert(Game.cats, Cat.new({
-                scale = 0.5,
-                x = -10 - 14*i,
-                y = 24,
+        for _ = 2,math.min(Game.level, Game.lives) do
+            local scale = math.random()*math.random()*0.25 + 0.5
+            table.insert(newCats, Cat.new({
+                scale = scale,
+                y = Game.arena.launchY,
                 vx = 30 + Game.level
             }))
+        end
+
+        -- kern the cats
+        local x = 0
+        for _,cat in ipairs(newCats) do
+            cat.x = 0
+            local ll, _, rr = cat:getBounds()
+            local ofs = x - rr - 2
+            cat.x = ofs
+            x = ll + ofs
+            table.insert(Game.cats, cat)
         end
     end
 
@@ -185,6 +205,13 @@ function love.update(dt)
     end
 
     if profiler then profiler.detach() end
+end
+
+local function printCentered(text, x, y, w)
+    local scrW = math.floor(w/8)
+    local txtW = text:len()
+    local spaces = math.floor((scrW - txtW + 1)/2)
+    love.graphics.print(text, x + 8*spaces, y)
 end
 
 function love.draw()
@@ -226,11 +253,11 @@ function love.draw()
 
         if Game.levelDisplayTime > 0 then
             love.graphics.setColor(palette.yellow)
-            love.graphics.printf('Level ' .. Game.level, 0, 101, 320, "center")
+            printCentered('Level ' .. Game.level, 0, 101, 320)
         elseif Game.lives == 0 then
             love.graphics.setColor(palette.cyan)
-            love.graphics.printf('Game Over', 0, 101, 320, "center")
-            love.graphics.printf("High Score: " .. config.highscore, 0, 109, 320, "center")
+            printCentered('Game Over', 0, 101, 320)
+            printCentered("High Score " .. config.highscore, 0, 109, 320)
         end
     end)
 

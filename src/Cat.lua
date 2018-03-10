@@ -60,6 +60,10 @@ function Cat:getBounds()
         self.y
 end
 
+function Cat:active()
+    return self.state == Cat.State.ready or self.state == Cat.State.playing
+end
+
 function Cat:collidesWith(x, y, w, h)
     local cl, ct, cr, cb = self:getBounds()
     local pl, pt, pr, pb = geom.xywh2ltrb(x,y,w,h)
