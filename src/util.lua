@@ -292,6 +292,15 @@ function util.mpairs(...)
     end)
 end
 
+-- Get the keys from an array
+function util.keys(a)
+    local keys = {}
+    for k in pairs(a) do
+        table.insert(keys, k)
+    end
+    return keys
+end
+
 -- Sorted pairs; borrowed from https://stackoverflow.com/a/15706820/318857
 function util.spairs(t, order)
     -- collect the keys

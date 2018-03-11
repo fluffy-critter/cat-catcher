@@ -121,7 +121,7 @@ function love.update(dt)
 
     Game.spawnTime = Game.spawnTime - dt
     if Game.spawnTime <= 0 then
-        print("spawmtime",Game.spawnTime)
+        if config.debug then print("spawmtime",Game.spawnTime) end
         table.insert(Game.objects, Game.items[math.random(#Game.items)].new({}, Game))
         Game.spawnTime = math.random(5, 10)
     end
@@ -182,8 +182,10 @@ function love.update(dt)
                 Game.randomizer.timeJitter = Game.randomizer.timeJitter * 1.1
             end
 
-            bgm.volumes.doot = math.random(0,1)
-            bgm.volumes.pad = 1 - bgm.volumes.doot
+            bgm.volumes.bass = (Game.lives % 2 == 0) and 1 or 0
+            bgm.volumes.doot = (Game.lives % 3 == 0) and 1 or 0
+            bgm.volumes.pad = (Game.lives > 5) and 1 or 0
+
         elseif Game.level > 3 then
             animator:add({
                 target = Game.arena,
