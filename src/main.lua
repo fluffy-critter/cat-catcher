@@ -137,7 +137,7 @@ function love.update(dt)
         Game.level = Game.level + 1
         Game.levelDisplayTime = Game.metronome.interval*(8 - (Game.metronome.beat % 4))
 
-        if Game.lives < 9 then
+        if Game.lives < 9 and Game.level % 5 == 0 then
             Game.lives = Game.lives + 1
         end
 
@@ -146,15 +146,16 @@ function love.update(dt)
             color = Game.level == 1 and palette.white or nil,
             scale = 1,
             y = Game.arena.launchY,
-            vx = 30 + Game.level,
+            vx = 30 + Game.level
         }))
 
-        for _ = 2,math.min(Game.level, Game.lives) do
+        for n = 2,math.min(Game.level, Game.lives) do
             local scale = math.random()*math.random()*0.25 + 0.5
             table.insert(newCats, Cat.new({
                 scale = scale,
                 y = Game.arena.launchY,
-                vx = 30 + Game.level
+                vx = 30 + math.max(0, Game.level - n),
+                ay = 120 + n*Game.level
             }))
         end
 
