@@ -41,6 +41,7 @@ function Cat.new(o)
         jump = 8,
         ofsY = 0,
         bounce = 0.98,
+        minVY = -200,
         wallSound = soundpool.load('sound/wall.ogg'),
         floorSound = soundpool.load('sound/floor.ogg'),
         bounceSound = soundpool.load('sound/bounce.ogg'),
@@ -111,7 +112,7 @@ function Cat:update(dt, game)
         self.y = self.y + (self.vy + 0.5*self.ay*dt)*dt
 
         self.vx = self.vx + self.ax*dt
-        self.vy = self.vy + self.ay*dt
+        self.vy = math.max(self.minVY, self.vy + self.ay*dt)
 
         self.angle = 0 -- TODO
 
