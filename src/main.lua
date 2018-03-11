@@ -19,6 +19,7 @@ local bgm = require 'bgm'
 local Cat = require 'Cat'
 local Paddle = require 'Paddle'
 local Animator = require 'Animator'
+local PlatformRandomizer = require 'PlatformRandomizer'
 
 local BoostPellet = require 'BoostPellet'
 
@@ -31,6 +32,7 @@ local screen = {
 local animator = Animator.new()
 
 local Game = {
+    animator = animator,
     arena = {
         launchX = 32,
         launchY = 24,
@@ -171,7 +173,18 @@ function love.update(dt)
             bgm.volumes.bass = 1
         end
 
-        if Game.level > 3 then
+        if Game.level >= 10 then
+            if not Game.randomizer then
+                Game.randomizer = PlatformRandomizer.new()
+                table.insert(Game.effects, Game.randomizer)
+            else
+                Game.randomizer.timeBase = Game.randomizer.timeBase * 0.9
+                Game.randomizer.timeJitter = Game.randomizer.timeJitter * 1.1
+            end
+
+            bgm.volumes.doot = math.random(0,1)
+            bgm.volumes.pad = 1 - bgm.volumes.doot
+        elseif Game.level > 3 then
             animator:add({
                 target = Game.arena,
                 property = 'destY',
@@ -187,7 +200,7 @@ function love.update(dt)
     end
 
     util.runQueue(Game.effects, function(effect)
-        return effect:update(dt)
+        return effect:update(dt, Game)
     end)
 
     Game.paddle:update(dt)
