@@ -4,27 +4,27 @@
 sound pool functions
 ]]
 
-local util = require 'util'
+local soundpool = {}
 
-local SoundPool = {}
+local datas = {}
+local sources = {}
 
-function SoundPool.new(o)
-    local self = o or {}
-
-    util.applyDefaults(self, {
-        sources = {}
-    })
-
-    setmetatable(self, {__index = SoundPool})
-    return self
+function soundpool.load(path)
+    if not datas[path] then
+        datas[path] = love.sound.newSoundData(path)
+    end
+    return datas[path]
 end
 
 -- Play a sound, optionally calling a pre-play callback first
-function SoundPool:play(sdata, cb)
-    local sources = self.sources[sdata] or {}
+function soundpool.play(sdata, cb)
+    if not sources[sdata] then
+        sources[sdata] = {}
+    end
+    local spool = sources[sdata]
 
     local source
-    for _,s in ipairs(sources) do
+    for _,s in ipairs(spool) do
         if not s:isPlaying() then
             source = s
             break
@@ -43,4 +43,4 @@ function SoundPool:play(sdata, cb)
     return source
 end
 
-return SoundPool
+return soundpool

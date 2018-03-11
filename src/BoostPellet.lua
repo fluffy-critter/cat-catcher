@@ -9,6 +9,7 @@ local BoostPellet = {}
 local util = require 'util'
 local items = require 'items'
 local palette = require 'palette'
+local soundpool = require 'soundpool'
 
 function BoostPellet.new(o, Game)
     local self = o or {}
@@ -23,7 +24,8 @@ function BoostPellet.new(o, Game)
         item = items.booster,
         color = palette.yellow,
         lifetime = math.random(5,15),
-        strength = math.random(50,100)
+        strength = math.random(50,100),
+        grabSound = soundpool.load('sound/pellet.ogg')
     })
 
     return self
@@ -36,6 +38,7 @@ end
 
 function BoostPellet:onCollect(cat)
     cat.vy = -math.abs(cat.vy) - self.strength
+    soundpool.play(self.grabSound)
 end
 
 function BoostPellet:draw()

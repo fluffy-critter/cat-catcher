@@ -44,7 +44,7 @@ local Game = {
     spawnTime = 10,
     lives = 9,
     score = 0,
-    level = 3,
+    level = 0,
     nextLife = 1000,
     levelDisplayTime = 0
 }

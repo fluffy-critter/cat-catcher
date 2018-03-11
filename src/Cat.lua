@@ -9,6 +9,7 @@ local imagepool = require 'imagepool'
 local palette = require 'palette'
 local config = require 'config'
 local geom = require 'geom'
+local soundpool = require 'soundpool'
 
 local Cat = {}
 
@@ -39,7 +40,11 @@ function Cat.new(o)
         points = 1,
         jump = 8,
         ofsY = 0,
-        bounce = 0.98
+        bounce = 0.98,
+        wallSound = soundpool.load('sound/wall.ogg'),
+        floorSound = soundpool.load('sound/floor.ogg'),
+        bounceSound = soundpool.load('sound/bounce.ogg'),
+        savedSound = soundpool.load('sound/saved.ogg')
     })
 
     return self
@@ -117,7 +122,7 @@ function Cat:update(dt, game)
             self.y = game.arena.height
             self.vx = math.min(-30, -math.abs(self.vx))
             game.lives = math.max(0, game.lives - 1)
-
+            soundpool.play(self.floorSound)
         end
 
         local ll, tt, rr, _ = self:getBounds()
@@ -134,10 +139,12 @@ function Cat:update(dt, game)
         if ll < 0 then
             self.x = self.x + ll
             self.vx = math.abs(self.vx)
+            soundpool.play(self.wallSound)
         end
         if rr > game.arena.width then
             self.x = self.x - rr + game.arena.width
             self.vx = -math.abs(self.vx)
+            soundpool.play(self.wallSound)
         end
 
         -- if it hits the paddle, it bounces
@@ -159,6 +166,7 @@ function Cat:update(dt, game)
 
                 game.score = game.score + self.points
                 self.points = self.points + 1
+                soundpool.play(self.bounceSound)
             end
         end
 
@@ -170,17 +178,20 @@ function Cat:update(dt, game)
                 print("bonk! dest")
                 self.x = self.x - rr + game.arena.destX
                 self.vx = -math.abs(self.vx)
+                soundpool.play(self.wallSound)
             elseif self.vy < 0 then
                 -- we hit our head :(
                 print("ouch! dest")
                 self.y = self.y + (game.arena.destY + game.arena.destH - tt)
                 self.vy = math.abs(self.vy)
+                soundpool.play(self.wallSound) -- TODO ceiling sound
             else
                 -- we landed! we are free!
                 self.vx = math.max(30, self.vx)
                 self.y = game.arena.destY
                 self.state = Cat.State.saved
                 game.score = game.score + 10*self.points + 100
+                soundpool.play(self.savedSound)
             end
         end
     elseif self.state == Cat.State.lost then
