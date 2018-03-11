@@ -14,9 +14,11 @@ local config = require 'config'
 local profiler = config.profiler and require 'profiler'
 local palette = require 'palette'
 local font = love.graphics.newFont('c64-pro-mono.ttf', 8)
+local bgm = require 'bgm'
 
 local Cat = require 'Cat'
 local Paddle = require 'Paddle'
+local Animator = require 'Animator'
 
 local BoostPellet = require 'BoostPellet'
 
@@ -25,6 +27,8 @@ local screen = {
     ox = 0,
     oy = 0,
 }
+
+local animator = Animator.new()
 
 local Game = {
     arena = {
@@ -40,16 +44,10 @@ local Game = {
     spawnTime = 10,
     lives = 9,
     score = 0,
-    level = 0,
+    level = 3,
     nextLife = 1000,
     levelDisplayTime = 0
 }
-
-local function setSpeed(speed)
-    for _,music in ipairs(Game.bgm) do
-        music:setPitch(speed)
-    end
-end
 
 function love.keypressed(key)
     if key == 'f' then
@@ -63,19 +61,6 @@ function love.load(args)
     cute.go(args)
 
     love.mouse.setRelativeMode(true)
-
-    Game.bgm = {
-        love.audio.newSource('sound/bgm1.ogg'),
-        -- love.audio.newSource('sound/bgm2.ogg'),
-        -- love.audio.newSource('sound/bgm3.ogg'),
-        love.audio.newSource('sound/bgm4.ogg'),
-    }
-
-    for _,music in ipairs(Game.bgm) do
-        music:setLooping(true)
-        -- music:setVolume(0.1)
-        music:play()
-    end
 
     love.window.setMode(config.width, config.height, {
         resizable = true,
@@ -101,7 +86,7 @@ function love.load(args)
     screen.textLayer = love.graphics.newCanvas(320, 200)
     screen.textLayer:setFilter("nearest")
 
-    setSpeed(1)
+    bgm:start()
 end
 
 function Game:getSpawnLocation()
@@ -125,8 +110,10 @@ end
 function love.update(dt)
     if profiler then profiler.attach("update", dt) end
 
-    Game.metronome.beat = Game.bgm[1]:tell()*64/Game.bgm[1]:getDuration()
-    Game.metronome.interval = Game.bgm[1]:getDuration()/64/Game.bgm[1]:getPitch()
+    animator:update(dt)
+
+    bgm:update(dt)
+    Game.metronome = bgm.metronome
 
     Game.levelDisplayTime = Game.levelDisplayTime - dt
 
@@ -179,6 +166,24 @@ function love.update(dt)
             x = ll + ofs
             table.insert(Game.cats, cat)
         end
+
+        if Game.level > 1 then
+            bgm.volumes.bass = 1
+        end
+
+        if Game.level > 3 then
+            animator:add({
+                target = Game.arena,
+                property = 'destY',
+                endPos = math.random(80, 120),
+                easing = Animator.Easing.ease_inout
+            })
+            bgm.volumes.pad = 1
+        end
+
+        bgm.volumes.perc = 1
+    elseif catCount == 0 then
+        bgm:stop()
     end
 
     util.runQueue(Game.effects, function(effect)
