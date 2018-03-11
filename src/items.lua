@@ -6,8 +6,8 @@ items sprites
 
 local items = {}
 
-local imagePool = require('imagepool')
-local quadtastic = require('thirdparty.libquadtastic')
+local imagePool = require 'imagepool'
+local quadtastic = require 'thirdparty.libquadtastic'
 
 local function ingest(imageFile, quadFile)
     local image = imagePool.load(imageFile, {nearest=true})

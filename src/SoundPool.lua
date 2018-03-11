@@ -4,7 +4,7 @@
 sound pool functions
 ]]
 
-local util = require('util')
+local util = require 'util'
 
 local SoundPool = {}
 

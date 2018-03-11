@@ -7,13 +7,13 @@ Utility library unit tests
 
 ]]
 
-local cute = require('thirdparty.cute')
+local cute = require 'thirdparty.cute'
 local notion = cute.notion
 local check = cute.check
 -- local minion = cute.minion
 -- local report = cute.report
 
-local util = require('util')
+local util = require 'util'
 
 notion("Enums form an appropriate equivalence class", function()
     local myEnum = util.enum("first", "second", "third")

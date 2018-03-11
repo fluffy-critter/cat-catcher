@@ -4,11 +4,11 @@
 Cats!
 ]]
 
-local util = require('util')
-local imagepool = require('imagepool')
-local palette = require('palette')
-local config = require('config')
-local geom = require('geom')
+local util = require 'util'
+local imagepool = require 'imagepool'
+local palette = require 'palette'
+local config = require 'config'
+local geom = require 'geom'
 
 local Cat = {}
 

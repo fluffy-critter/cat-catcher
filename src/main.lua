@@ -8,17 +8,17 @@ setmetatable(_G, {
     end
 })
 
-local cute = require('thirdparty.cute')
-local util = require('util')
-local config = require('config')
-local profiler = config.profiler and require('profiler')
-local palette = require('palette')
+local cute = require 'thirdparty.cute'
+local util = require 'util'
+local config = require 'config'
+local profiler = config.profiler and require 'profiler'
+local palette = require 'palette'
 local font = love.graphics.newFont('c64-pro-mono.ttf', 8)
 
-local Cat = require('Cat')
-local Paddle = require('Paddle')
+local Cat = require 'Cat'
+local Paddle = require 'Paddle'
 
-local BoostPellet = require('BoostPellet')
+local BoostPellet = require 'BoostPellet'
 
 local screen = {
     scale = 1,

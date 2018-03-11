@@ -6,9 +6,9 @@ boost pellet
 
 local BoostPellet = {}
 
-local util = require('util')
-local items = require('items')
-local palette = require('palette')
+local util = require 'util'
+local items = require 'items'
+local palette = require 'palette'
 
 function BoostPellet.new(o, Game)
     local self = o or {}
@@ -35,7 +35,7 @@ function BoostPellet:update(dt)
 end
 
 function BoostPellet:onCollect(cat)
-    cat.vy = math.min(cat.vy, 0) - self.strength
+    cat.vy = -math.abs(cat.vy) - self.strength
 end
 
 function BoostPellet:draw()

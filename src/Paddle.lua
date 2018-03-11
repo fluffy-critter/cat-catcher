@@ -6,8 +6,8 @@ Paddle!
 
 local Paddle = {}
 
-local palette = require('palette')
-local util = require('util')
+local palette = require 'palette'
+local util = require 'util'
 
 function Paddle.new(o)
     local self = o or {}
@@ -19,6 +19,7 @@ function Paddle.new(o)
         h = 4,
         y = 200 - 4 - 16,
         vx = 0,
+        keyAX = 2000,
         friction = 0.0005,
         bounce = 0.05,
         color = palette.lightblue,
@@ -32,10 +33,16 @@ function Paddle:impulse(vx)
 end
 
 function Paddle:update(dt)
-    -- TODO handle keyboard and/or joystick
+    local ax = 0
+    if love.keyboard.isDown('right') then
+        ax = ax + self.keyAX
+    end
+    if love.keyboard.isDown('left') then
+        ax = ax - self.keyAX
+    end
 
-    self.x = self.x + self.vx*dt
-    self.vx = self.vx*math.pow(self.friction, dt)
+    self.x = self.x + (self.vx + ax*0.5*dt)*dt
+    self.vx = self.vx*math.pow(self.friction, dt) + ax*dt
 
     if self.x < 0 then
         self.x = 0

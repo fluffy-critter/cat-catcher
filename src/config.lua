@@ -7,7 +7,7 @@ config.lua - default user configuration/persistent settings
 
 ]]
 
-local util = require('util')
+local util = require 'util'
 
 local overscan = 1.1
 

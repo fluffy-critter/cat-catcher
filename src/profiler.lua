@@ -7,8 +7,8 @@ Profiler thingus. Inspired by classic 'CRT-scanline' profiling techniques.
 
 ]]
 
-local util = require('util')
-local bit = require('bit')
+local util = require 'util'
+local bit = require 'bit'
 
 local profiler = {}
 
