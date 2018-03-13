@@ -29,6 +29,8 @@ local screen = {
     oy = 0,
 }
 
+local paused = false
+
 local animator = Animator.new()
 
 local Game = {
@@ -56,6 +58,8 @@ function love.keypressed(key)
         config.fullscreen = not love.window.getFullscreen()
         love.window.setFullscreen(config.fullscreen)
         config.save()
+    elseif key == 'p' then
+        paused = not paused
     end
 end
 
@@ -116,8 +120,11 @@ function love.update(dt)
 
     bgm:update(dt)
     Game.metronome = bgm.metronome
-
     Game.levelDisplayTime = Game.levelDisplayTime - dt
+
+    if paused then
+        dt = 0
+    end
 
     Game.spawnTime = Game.spawnTime - dt
     if Game.spawnTime <= 0 then
@@ -280,13 +287,18 @@ function love.draw()
         love.graphics.setColor(palette.lightred)
         love.graphics.printf('Lives: ' .. Game.lives, 0, 1, 320, "right")
 
+        if paused then
+            love.graphics.setColor(palette.lightgreen)
+            printCentered('Pawsed!', 0, 89, 320)
+        end
+
         if Game.levelDisplayTime > 0 then
             love.graphics.setColor(palette.yellow)
-            printCentered('Level ' .. Game.level, 0, 101, 320)
+            printCentered('Level ' .. Game.level, 0, 97, 320)
         elseif Game.lives == 0 then
             love.graphics.setColor(palette.cyan)
             printCentered('Game Over', 0, 101, 320)
-            printCentered("High Score " .. config.highscore, 0, 109, 320)
+            printCentered("High Score " .. config.highscore, 0, 105, 320)
         end
     end)
 
@@ -300,9 +312,9 @@ function love.draw()
         love.graphics.setBlendMode("alpha", "premultiplied")
         love.graphics.draw(screen.textLayer)
 
-        love.graphics.setColor(unpack(palette.lightred))
+        love.graphics.setColor(palette.lightred)
         love.graphics.rectangle("fill", 0, Game.arena.launchY, Game.arena.launchX, Game.arena.launchH)
-        love.graphics.setColor(unpack(palette.lightgreen))
+        love.graphics.setColor(palette.lightgreen)
         love.graphics.rectangle("fill", Game.arena.destX, Game.arena.destY,
             Game.arena.width - Game.arena.destX, Game.arena.destH)
 

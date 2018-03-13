@@ -7,7 +7,7 @@ HOW TO PLAY
 Use your mouse or the cursor keys to move the paddle. Try to get the cats safely
 to the platform on the right.
 
-Press F to toggle fullscreen mode.
+Press F to toggle fullscreen mode, and P to paws.
 
 CREDITS
 
