@@ -187,10 +187,17 @@ function love.update(dt)
             bgm.volumes.doot = (Game.lives % 3 == 0) and 1 or 0
             bgm.volumes.pad = (Game.lives > 5) and 1 or 0
         elseif Game.level > 5 then
+            local destY = math.random(60, 100)
             animator:add({
                 target = Game.arena,
                 property = 'destY',
-                endPos = math.random(60, 100),
+                endPos = destY,
+                easing = Animator.Easing.ease_inout
+            })
+            animator:add({
+                target = Game.arena,
+                property = 'launchY',
+                endPos = math.random(40, destY),
                 easing = Animator.Easing.ease_inout
             })
             bgm.volumes.pad = Game.level % 2
