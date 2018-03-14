@@ -30,6 +30,7 @@ local screen = {
 }
 
 local paused = false
+local unpauseOnFocus = false
 
 local animator = Animator.new()
 
@@ -60,13 +61,24 @@ function love.keypressed(key)
         config.save()
     elseif key == 'p' then
         paused = not paused
+    elseif key == 'escape' then
+        os.exit(0)
+    end
+end
+
+function love.focus(focus)
+    love.mouse.setRelativeMode(focus)
+    if not focus then
+        unpauseOnFocus = not paused
+        paused = true
+    elseif unpauseOnFocus then
+        paused = false
+        unpauseOnFocus = false
     end
 end
 
 function love.load(args)
     cute.go(args)
-
-    love.mouse.setRelativeMode(true)
 
     love.window.setMode(config.width, config.height, {
         resizable = true,
