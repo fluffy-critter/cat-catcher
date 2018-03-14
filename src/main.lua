@@ -316,7 +316,7 @@ function love.draw()
             printCentered('Level ' .. Game.level, 0, 97, 320)
         elseif Game.lives == 0 then
             love.graphics.setColor(palette.cyan)
-            printCentered('Game Over', 0, 101, 320)
+            printCentered('Game Over', 0, 97, 320)
             printCentered("High Score " .. config.highscore, 0, 105, 320)
         end
     end)
