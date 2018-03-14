@@ -16,6 +16,7 @@ local config = {
     width = 320*overscan*3,
     height = 240*overscan*3,
     vsync = true,
+    mouseSpeed = 4.5
 }
 
 local filePath = 'userconf.lua'

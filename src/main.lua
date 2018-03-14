@@ -25,8 +25,8 @@ local BoostPellet = require 'BoostPellet'
 
 local screen = {
     scale = 1,
-    ox = 0,
-    oy = 0,
+    x = 0,
+    y = 0,
 }
 
 local paused = false
@@ -54,6 +54,16 @@ local Game = {
     levelDisplayTime = 0
 }
 
+local mouse = {
+    x = 0,
+    y = 0
+}
+
+local function setMouseCapture(capture)
+    love.mouse.setRelativeMode(capture)
+    love.mouse.setVisible(false)
+end
+
 function love.keypressed(key)
     if key == 'f' then
         config.fullscreen = not love.window.getFullscreen()
@@ -61,13 +71,14 @@ function love.keypressed(key)
         config.save()
     elseif key == 'p' then
         paused = not paused
+        setMouseCapture(not paused)
     elseif key == 'escape' then
         os.exit(0)
     end
 end
 
 function love.focus(focus)
-    love.mouse.setRelativeMode(focus)
+    setMouseCapture(focus)
     if not focus then
         unpauseOnFocus = not paused
         paused = true
@@ -121,8 +132,13 @@ function love.resize(w, h)
     end
 end
 
-function love.mousemoved(_, _, dx, _)
-    Game.paddle:impulse(dx/screen.scale)
+function love.mousemoved(x, y, dx, _)
+    if not paused then
+        Game.paddle:impulse(dx*config.mouseSpeed/screen.scale)
+    else
+        mouse.x = util.clamp((x - screen.x)/screen.scale, 0, 320)
+        mouse.y = util.clamp((y - screen.y)/screen.scale, 0, 200)
+    end
 end
 
 function love.update(dt)
@@ -280,6 +296,7 @@ function love.draw()
 
     screen.w, screen.h = math.floor(320*scale), math.floor(200*scale)
     screen.x, screen.y = (sw - screen.w)/2, (sh - screen.h)/2
+    screen.scale = scale
 
     if not screen.canvas or screen.canvas:getWidth() ~= screen.w or screen.canvas:getHeight() ~= screen.h then
         screen.canvas = love.graphics.newCanvas(screen.w, screen.h)
@@ -344,6 +361,13 @@ function love.draw()
         util.runQueue(Game.objects, function(obj)
             return obj:draw()
         end)
+
+        if paused then
+            -- TODO draw mouse cursor
+            love.graphics.setColor(palette.white)
+            love.graphics.rectangle("fill", mouse.x, mouse.y, 8, 8)
+            -- print(mouse.x, mouse.y, screen.scale)
+        end
 
         love.graphics.pop()
     end)
