@@ -62,6 +62,8 @@ local mouse = {
 local function setMouseCapture(capture)
     love.mouse.setRelativeMode(capture)
     love.mouse.setVisible(false)
+    love.mouse.setGrabbed(not capture)
+    print(capture, love.mouse.isGrabbed())
 end
 
 function love.keypressed(key)
@@ -115,6 +117,9 @@ function love.load(args)
     screen.textLayer = love.graphics.newCanvas(320, 200)
     screen.textLayer:setFilter("nearest")
 
+    mouse.cursor = love.graphics.newImage("gfx/mouse.png")
+    mouse.cursor:setFilter("nearest")
+
     bgm:start()
 end
 
@@ -135,9 +140,19 @@ end
 function love.mousemoved(x, y, dx, _)
     if not paused then
         Game.paddle:impulse(dx*config.mouseSpeed/screen.scale)
+    end
+
+    mouse.x = (x - screen.x)/screen.scale
+    mouse.y = (y - screen.y)/screen.scale
+
+    if paused and (mouse.x < 0 or mouse.x >= 320 or mouse.y < 0 or mouse.y >= 200) then
+        -- workaround for LÖVE bug that was causing the mouse to remain grabbed
+        -- even if it's been explicitly set not-grabbed
+        love.mouse.setCursor()
+        love.mouse.setVisible(true)
+        love.mouse.setGrabbed(false)
     else
-        mouse.x = util.clamp((x - screen.x)/screen.scale, 0, 320)
-        mouse.y = util.clamp((y - screen.y)/screen.scale, 0, 200)
+        love.mouse.setVisible(false)
     end
 end
 
@@ -363,10 +378,8 @@ function love.draw()
         end)
 
         if paused then
-            -- TODO draw mouse cursor
             love.graphics.setColor(palette.white)
-            love.graphics.rectangle("fill", mouse.x, mouse.y, 8, 8)
-            -- print(mouse.x, mouse.y, screen.scale)
+            love.graphics.draw(mouse.cursor, mouse.x, mouse.y, 0, 1, 1, 0, 3)
         end
 
         love.graphics.pop()
