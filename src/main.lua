@@ -50,6 +50,7 @@ local GameDefaults = {
     score = 0,
     level = 0,
     nextLife = 1000,
+    nextLifeIncr = 500,
     levelDisplayTime = 0,
     numSaved = 0
 }
@@ -220,6 +221,7 @@ function love.update(dt)
 
     if catCount == 0 and Game.lives > 0 then
         -- reward with 100 points for every rescued cat
+        print("Level " .. Game.level .. ": saved " .. Game.numSaved .. " cats")
         Game.score = Game.score + 100*Game.numSaved
         Game.numSaved = 0
 
@@ -321,7 +323,8 @@ function love.update(dt)
 
     if Game.score >= Game.nextLife then
         Game.lives = Game.lives + 1
-        Game.nextLife = Game.nextLife + 1000
+        Game.nextLife = Game.nextLife + Game.nextLifeIncr
+        Game.nextLifeIncr = Game.nextLifeIncr + 500
     end
 
     if not config.highscore or Game.score > config.highscore then
@@ -376,6 +379,8 @@ function love.draw()
         love.graphics.print('Score: ' .. Game.score, 0, 1)
         love.graphics.setColor(palette.lightred)
         love.graphics.printf('Lives: ' .. Game.lives, 0, 1, 320, "right")
+        love.graphics.setColor(palette.red)
+        love.graphics.printf('Next at ' .. Game.nextLife, 0, 9, 320, "right")
 
         if paused then
             love.graphics.setColor(palette.lightgreen)

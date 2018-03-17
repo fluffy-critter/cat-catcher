@@ -23,16 +23,14 @@ function bgm:start()
     local pos = self.tracks.bass:isPlaying() and self.tracks.bass:tell() or 0
 
     for k,sound in pairs(self.tracks) do
+        sound:setLooping(true)
         if not sound:isPlaying() then
             sound:setVolume(0)
+            sound:seek(pos % sound:getDuration())
+            sound:play()
         end
-
-        sound:seek(pos % sound:getDuration())
         print(k,sound:tell(),sound:getDuration())
         self.volumes[k] = 0
-
-        sound:setLooping(true)
-        sound:play()
     end
 end
 
