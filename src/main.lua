@@ -34,8 +34,7 @@ local unpauseOnFocus = false
 
 local animator = Animator.new()
 
-local Game = {
-    animator = animator,
+local GameDefaults = {
     arena = {
         launchX = 32,
         launchY = 24,
@@ -47,17 +46,46 @@ local Game = {
         height = 200
     },
     spawnTime = 10,
-    lives = 9,
+    lives = 1,
     score = 0,
     level = 0,
     nextLife = 1000,
     levelDisplayTime = 0
 }
 
+local Game = {
+    animator = animator,
+}
+
 local mouse = {
     x = 0,
     y = 0
 }
+
+function Game:start()
+    if not Game.lives or Game.lives == 0 then
+        if not Game.arena then
+            Game.arena = util.shallowCopy(GameDefaults.arena)
+        else
+            for k,v in pairs(GameDefaults.arena) do
+                Game.animator:add({
+                    target = Game.arena,
+                    property = k,
+                    endPos = v,
+                    easing = Animator.Easing.ease_inout
+                })
+            end
+        end
+
+        for k,v in pairs(GameDefaults) do
+            if k ~= "arena" then
+                Game[k] = v
+            end
+        end
+
+        bgm:start()
+    end
+end
 
 local function setMouseCapture(capture)
     love.mouse.setRelativeMode(capture)
@@ -74,9 +102,15 @@ function love.keypressed(key)
     elseif key == 'p' then
         paused = not paused
         setMouseCapture(not paused)
+    elseif key == 'space' then
+        Game:start()
     elseif key == 'escape' then
         os.exit(0)
     end
+end
+
+function love.mousepressed()
+    Game:start()
 end
 
 function love.focus(focus)
@@ -120,7 +154,7 @@ function love.load(args)
     mouse.cursor = love.graphics.newImage("gfx/mouse.png")
     mouse.cursor:setFilter("nearest")
 
-    bgm:start()
+    Game:start()
 end
 
 function Game:getSpawnLocation()
