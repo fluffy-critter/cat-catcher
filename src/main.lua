@@ -323,8 +323,8 @@ function love.update(dt)
 
     if Game.score >= Game.nextLife then
         Game.lives = Game.lives + 1
-        Game.nextLife = Game.nextLife + Game.nextLifeIncr
         Game.nextLifeIncr = Game.nextLifeIncr + 500
+        Game.nextLife = Game.nextLife + Game.nextLifeIncr
     end
 
     if not config.highscore or Game.score > config.highscore then

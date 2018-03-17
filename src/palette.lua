@@ -15,12 +15,12 @@ local palette = {
     {184,199,111},  -- 8 yellow
     {111,79,37},    -- 9 orange
     {67,57,0},      -- 10 brown
-    {154,103,89},   -- 11 light red
-    {68,68,68},     -- 12 dark gray
-    {108,108,108},  -- 13 medium gray
-    {154,210,132},  -- 14 light green
-    {108,94,181},   -- 15 light blue
-    {149,149,149}   -- 16 light gray
+    {154,103,89},   -- 11 lightred
+    {68,68,68},     -- 12 gray1
+    {108,108,108},  -- 13 gray2
+    {154,210,132},  -- 14 lightgreen
+    {108,94,181},   -- 15 lightblue
+    {149,149,149}   -- 16 gray3
 }
 
 for idx,name in ipairs({

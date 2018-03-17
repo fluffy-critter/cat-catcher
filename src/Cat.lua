@@ -14,7 +14,17 @@ local soundpool = require 'soundpool'
 local Cat = {}
 
 Cat.State = util.enum("ready", "playing", "saved", "lost")
-Cat.Colors = {palette.white, palette.lightblue, palette.lightred, palette.yellow, palette.gray3, palette.violet, palette.orange, palette.cyan}
+Cat.Colors = {
+    palette.white,
+    palette.cyan,
+    palette.violet,
+    palette.yellow,
+    palette.orange,
+    palette.lightred,
+    palette.lightgreen,
+    palette.lightblue,
+    palette.gray3,
+}
 
 function Cat.new(o)
     local self = o or {}
