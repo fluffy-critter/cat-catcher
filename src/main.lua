@@ -228,7 +228,8 @@ function love.update(dt)
         Game.level = Game.level + 1
         Game.levelDisplayTime = Game.metronome.interval*(8 - (Game.metronome.beat % 4))
 
-        if Game.lives < 9 and Game.level % 5 == 0 then
+        Game.bonusLife = Game.lives < 9 and Game.level % 5 == 0
+        if Game.bonusLife then
             Game.lives = Game.lives + 1
         end
 
@@ -390,6 +391,9 @@ function love.draw()
         if Game.levelDisplayTime > 0 then
             love.graphics.setColor(palette.yellow)
             printCentered('Level ' .. Game.level, 0, 97, 320)
+            if Game.bonusLife then
+                printCentered('Bonus life awarded', 0, 105, 320)
+            end
         elseif Game.lives == 0 then
             love.graphics.setColor(palette.cyan)
             printCentered('Game Over', 0, 97, 320)
