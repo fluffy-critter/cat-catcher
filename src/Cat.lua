@@ -192,6 +192,7 @@ function Cat:update(dt, game)
                 self.y = game.arena.destY
                 self.state = Cat.State.saved
                 game.score = game.score + 10*self.points
+                game.numSaved = game.numSaved + 1
                 soundpool.play(self.savedSound)
             end
         end

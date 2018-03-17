@@ -50,7 +50,8 @@ local GameDefaults = {
     score = 0,
     level = 0,
     nextLife = 1000,
-    levelDisplayTime = 0
+    levelDisplayTime = 0,
+    numSaved = 0
 }
 
 local Game = {
@@ -82,6 +83,9 @@ function Game:start()
                 Game[k] = v
             end
         end
+
+        Game.objects = {}
+        Game.effects = {}
 
         bgm:start()
     end
@@ -141,12 +145,9 @@ function love.load(args)
 
     Game.metronome = {}
 
-    Game.objects = {}
     Game.items = {
         BoostPellet
     }
-
-    Game.effects = {}
 
     screen.textLayer = love.graphics.newCanvas(320, 200)
     screen.textLayer:setFilter("nearest")
@@ -219,7 +220,8 @@ function love.update(dt)
 
     if catCount == 0 and Game.lives > 0 then
         -- reward with 100 points for every rescued cat
-        Game.score = Game.score + 100*math.min(Game.level, Game.lives)
+        Game.score = Game.score + 100*Game.numSaved
+        Game.numSaved = 0
 
         Game.level = Game.level + 1
         Game.levelDisplayTime = Game.metronome.interval*(8 - (Game.metronome.beat % 4))
