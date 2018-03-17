@@ -17,6 +17,7 @@ function BoostPellet.new(o, Game)
 
     local x, y = Game:getSpawnLocation()
     util.applyDefaults(self, {
+        game = Game,
         x = x,
         y = y,
         w = 8,
@@ -39,6 +40,7 @@ end
 function BoostPellet:onCollect(cat)
     cat.vy = -math.abs(cat.vy) - self.strength
     soundpool.play(self.grabSound)
+    self.game.score = self.game.score + 10
 end
 
 function BoostPellet:draw()

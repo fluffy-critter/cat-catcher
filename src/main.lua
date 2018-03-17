@@ -46,7 +46,7 @@ local GameDefaults = {
         height = 200
     },
     spawnTime = 10,
-    lives = 1,
+    lives = 9,
     score = 0,
     level = 0,
     nextLife = 1000,
@@ -218,6 +218,9 @@ function love.update(dt)
     end
 
     if catCount == 0 and Game.lives > 0 then
+        -- reward with 100 points for every rescued cat
+        Game.score = Game.score + 100*math.min(Game.level, Game.lives)
+
         Game.level = Game.level + 1
         Game.levelDisplayTime = Game.metronome.interval*(8 - (Game.metronome.beat % 4))
 
