@@ -116,7 +116,7 @@ function Cat:update(dt, game)
             return true
         end
     elseif self.state == Cat.State.playing then
-        local _, pt, pr, pb = self:getBounds()
+        local pl, pt, pr, pb = self:getBounds()
 
         self.x = self.x + (self.vx + 0.5*self.ax*dt)*dt
         self.y = self.y + (self.vy + 0.5*self.ay*dt)*dt
@@ -160,17 +160,8 @@ function Cat:update(dt, game)
 
         -- if it hits the paddle, it bounces
         if self:collidesWith(game.paddle.x, game.paddle.y, game.paddle.w, game.paddle.h) then
-            if geom.spanOverlap(pt,pb,game.paddle.y,game.paddle.y+game.paddle.h) then
-                -- we bounced off the side
-                if pr < game.paddle.x then
-                    self.vx = -math.abs(self.vx)
-                    self.x = self.x - rr + game.paddle.x
-                else
-                    self.vx = math.abs(self.vx)
-                    self.x = self.x + ll - game.paddle.w - game.paddle.x
-                end
-            elseif self.vy > 0 then
-                -- we bounced off the top
+            if self.vy > 0 and geom.spanOverlap(pl, pr, game.paddle.x, game.paddle.x + game.paddle.w) then
+                -- we were previously overlapping horizontally, and we're moving down, so we bounced off the top
                 self.y = game.paddle.y
                 self.vy = -math.abs(self.vy)*self.bounce
                 self.vx = self.vx + game.paddle.vx
@@ -178,32 +169,46 @@ function Cat:update(dt, game)
                 game.score = math.max(0, game.score - self.points)
                 self.points = self.points + 1
                 soundpool.play(self.bounceSound)
+            elseif geom.spanOverlap(pt, pb, game.paddle.y, game.paddle.y + game.paddle.h) then
+                -- we were previously off to the side...
+                if pr <= game.paddle.x then
+                    self.vx = -math.abs(self.vx) + game.paddle.vx
+                    self.x = self.x - rr + game.paddle.x
+                elseif pr >= game.paddle.x + game.paddle.w then
+                    self.vx = math.abs(self.vx) + game.paddle.vx
+                    self.x = self.x + ll - game.paddle.w - game.paddle.x
+                end
             end
+            -- If we fall through here we probably bounced off a corner, so let the next frame decide what happens
         end
 
         -- right platform
         if self:collidesWith(game.arena.destX, game.arena.destY,
             game.arena.width - game.arena.destX, game.arena.destH) then
-            if pr < game.arena.destX and geom.spanOverlap(pt,pb,game.arena.destY,game.arena.destY+game.arena.destH) then
+            if geom.spanOverlap(pl, pr, game.arena.destX, game.arena.width) then
+                -- we were previously above or below...
+                if self.vy < 0 then
+                    -- we hit our head :(
+                    print("ouch! dest")
+                    self.y = self.y + (game.arena.destY + game.arena.destH - tt)
+                    self.vy = math.abs(self.vy)
+                    soundpool.play(self.wallSound) -- TODO ceiling sound
+                else
+                    -- we landed! we are free!
+                    self.vx = math.max(30, self.vx)
+                    self.y = game.arena.destY
+                    self.state = Cat.State.saved
+                    game.score = game.score + 10*self.points
+                    game.numSaved = game.numSaved + 1
+                    soundpool.play(self.savedSound)
+                end
+            elseif pr < game.arena.destX
+            and geom.spanOverlap(pt, pb, game.arena.destY, game.arena.destY + game.arena.destH) then
                 -- bounced off the side
                 print("bonk! dest")
                 self.x = self.x - rr + game.arena.destX
                 self.vx = -math.abs(self.vx)
                 soundpool.play(self.wallSound)
-            elseif self.vy < 0 then
-                -- we hit our head :(
-                print("ouch! dest")
-                self.y = self.y + (game.arena.destY + game.arena.destH - tt)
-                self.vy = math.abs(self.vy)
-                soundpool.play(self.wallSound) -- TODO ceiling sound
-            else
-                -- we landed! we are free!
-                self.vx = math.max(30, self.vx)
-                self.y = game.arena.destY
-                self.state = Cat.State.saved
-                game.score = game.score + 10*self.points
-                game.numSaved = game.numSaved + 1
-                soundpool.play(self.savedSound)
             end
         end
     elseif self.state == Cat.State.lost then
