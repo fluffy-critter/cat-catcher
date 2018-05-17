@@ -6,7 +6,7 @@ function love.conf(t)
     t.window.width = 360*3
     t.window.vsync = true
 
-    t.version = "0.10.2"
+    t.version = "11.1"
     t.identity = "CATcher"
     t.window.title = "CATcher"
 end

@@ -23,6 +23,10 @@ local palette = {
     {149,149,149}   -- 16 gray3
 }
 
+for key,val in ipairs(palette) do
+    palette[key] = {val[1]/255, val[2]/255, val[3]/255}
+end
+
 for idx,name in ipairs({
     "black", "white", "red", "cyan", "violet", "green", "blue", "yellow",
     "orange", "brown", "lightred", "gray1", "gray2", "lightgreen", "lightblue", "gray3"

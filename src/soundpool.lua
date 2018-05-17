@@ -35,7 +35,7 @@ function soundpool.play(sdata, cb)
         table.insert(sources, source)
     end
 
-    source:rewind()
+    source:stop()
     if cb then
         cb(source)
     end

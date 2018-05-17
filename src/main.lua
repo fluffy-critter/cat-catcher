@@ -150,7 +150,7 @@ function love.load(args)
         BoostPellet
     }
 
-    screen.textLayer = love.graphics.newCanvas(320, 200)
+    screen.textLayer = love.graphics.newCanvas(320, 200, {dpiscale=1})
     screen.textLayer:setFilter("nearest")
 
     mouse.cursor = love.graphics.newImage("gfx/mouse.png")
@@ -336,13 +336,6 @@ function love.update(dt)
     if profiler then profiler.detach() end
 end
 
-local function printCentered(text, x, y, w)
-    local scrW = math.floor(w/8)
-    local txtW = text:len()
-    local spaces = math.floor((scrW - txtW + 1)/2)
-    love.graphics.print(text, x + 8*spaces, y)
-end
-
 function love.draw()
     if profiler then profiler.attach("draw") end
 
@@ -361,6 +354,13 @@ function love.draw()
     end
 
     screen.textLayer:renderTo(function()
+        local function printCentered(text, x, y, w)
+            local scrW = math.floor(w/8)
+            local txtW = text:len()
+            local spaces = math.floor((scrW - txtW + 1)/2)
+            love.graphics.print(text, x + 8*spaces, y)
+        end
+
         love.graphics.clear(0,0,0,0)
 
         love.graphics.setBlendMode("alpha", "alphamultiply")
