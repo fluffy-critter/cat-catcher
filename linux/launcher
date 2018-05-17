@@ -1,0 +1,11 @@
+#!/bin/sh
+# Universal launcher script for Linux
+
+cd "$(dirname $0)"
+
+LOVE="bin/love-{LOVEVERSION}-linux-$(uname -m).AppImage"
+if [ ! -f "$LOVE" ] ; then
+    LOVE="bin/love-{LOVEVERSION}-linux-i686.AppImage"
+fi
+
+$LOVE "$(pwd)/lib/{BUNDLENAME}"
