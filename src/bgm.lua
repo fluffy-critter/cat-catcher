@@ -6,10 +6,10 @@ local util = require 'util'
 
 local bgm = {
     tracks = {
-        bass = love.audio.newSource('sound/bgm1.ogg', 'stream'),
-        doot = love.audio.newSource('sound/bgm2.ogg', 'stream'),
-        pad = love.audio.newSource('sound/bgm3.ogg', 'stream'),
-        perc = love.audio.newSource('sound/bgm4.ogg', 'stream'),
+        bass = love.audio.newSource('sound/bgm1.ogg', 'static'),
+        doot = love.audio.newSource('sound/bgm2.ogg', 'static'),
+        pad = love.audio.newSource('sound/bgm3.ogg', 'static'),
+        perc = love.audio.newSource('sound/bgm4.ogg', 'static'),
     },
     volumes = {},
     metronome = {}
