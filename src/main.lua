@@ -85,6 +85,8 @@ function Game:start()
             end
         end
 
+        Game.randomizer = nil
+
         Game.objects = {}
         Game.effects = {}
 
