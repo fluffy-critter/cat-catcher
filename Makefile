@@ -20,7 +20,7 @@ BUNDLE_ID=biz.beesbuzz.CATcher
 LOVE_VERSION=11.1
 
 # Version of the game - whenever this changes, set a tag for v$(BASEVERSION) for the revision base
-BASEVERSION=1.3.1
+BASEVERSION=1.3.2
 
 # Determine the full version string based on the tag
 COMMITHASH=$(shell git rev-parse --short HEAD)
