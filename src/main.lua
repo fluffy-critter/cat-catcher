@@ -316,9 +316,11 @@ function love.update(dt)
     end)
 
     Game.paddle:update(dt)
-    util.runQueue(Game.cats, function(cat)
-        return cat:update(dt, Game)
-    end)
+    for _=1,16 do
+        util.runQueue(Game.cats, function(cat)
+            return cat:update(dt/16, Game)
+        end)
+    end
 
     util.runQueue(Game.objects, function(obj)
         return obj:update(dt, Game)
