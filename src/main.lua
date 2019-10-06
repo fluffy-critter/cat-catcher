@@ -31,6 +31,7 @@ local screen = {
 
 local paused = false
 local unpauseOnFocus = false
+local gameCount = 0
 
 local animator = Animator.new()
 
@@ -46,9 +47,9 @@ local GameDefaults = {
         height = 200
     },
     spawnTime = 10,
-    lives = 9,
+    lives = 0,
     score = 0,
-    level = 0,
+    level = 1,
     nextLife = 1000,
     nextLifeIncr = 500,
     levelDisplayTime = 0,
@@ -64,35 +65,56 @@ local mouse = {
     y = 0
 }
 
+function Game:init()
+    if not self.arena then
+        self.arena = util.shallowCopy(GameDefaults.arena)
+    else
+        for k,v in pairs(GameDefaults.arena) do
+            self.animator:add({
+                target = Game.arena,
+                property = k,
+                endPos = v,
+                easing = Animator.Easing.ease_inout
+            })
+        end
+    end
+
+    for k,v in pairs(GameDefaults) do
+        if k ~= "arena" then
+            Game[k] = v
+        end
+    end
+
+    self.randomizer = nil
+
+    self.objects = {}
+    self.effects = {}
+
+    self.cats = {}
+    self.paddle = Paddle.new()
+
+    self.metronome = {}
+
+    self.items = {
+        BoostPellet
+    }
+
+end
+
 function Game:start()
     if not Game.lives or Game.lives == 0 then
-        if not Game.arena then
-            Game.arena = util.shallowCopy(GameDefaults.arena)
-        else
-            for k,v in pairs(GameDefaults.arena) do
-                Game.animator:add({
-                    target = Game.arena,
-                    property = k,
-                    endPos = v,
-                    easing = Animator.Easing.ease_inout
-                })
-            end
-        end
-
-        for k,v in pairs(GameDefaults) do
-            if k ~= "arena" then
-                Game[k] = v
-            end
-        end
-
-        Game.randomizer = nil
-
-        Game.objects = {}
-        Game.effects = {}
-
+        Game:init()
+        Game.lives = 9
         bgm:start()
+        gameCount = gameCount + 1
+        Game:flashLevel()
     end
 end
+
+function Game:flashLevel()
+    self.levelDisplayTime = bgm.metronome.interval*(8 - (bgm.metronome.beat % 4))
+end
+
 
 local function setMouseCapture(capture)
     love.mouse.setRelativeMode(capture)
@@ -101,14 +123,18 @@ local function setMouseCapture(capture)
     print(capture, love.mouse.isGrabbed())
 end
 
+function Game:pause()
+    paused = not paused
+    setMouseCapture(not paused)
+end
+
 function love.keypressed(key)
     if key == 'f' then
         config.fullscreen = not love.window.getFullscreen()
         love.window.setFullscreen(config.fullscreen)
         config.save()
     elseif key == 'p' then
-        paused = not paused
-        setMouseCapture(not paused)
+        Game:pause()
     elseif key == 'space' then
         Game:start()
     elseif key == 'escape' then
@@ -117,7 +143,11 @@ function love.keypressed(key)
 end
 
 function love.mousepressed()
-    Game:start()
+    if Game.lives > 0 then
+        Game:pause()
+    else
+        Game:start()
+    end
 end
 
 function love.focus(focus)
@@ -143,22 +173,13 @@ function love.load(args)
         minheight = 480
     })
 
-    Game.cats = {}
-    Game.paddle = Paddle.new()
-
-    Game.metronome = {}
-
-    Game.items = {
-        BoostPellet
-    }
+    Game:init()
 
     screen.textLayer = love.graphics.newCanvas(320, 200, {dpiscale=1})
     screen.textLayer:setFilter("nearest")
 
     mouse.cursor = love.graphics.newImage("gfx/mouse.png")
     mouse.cursor:setFilter("nearest")
-
-    Game:start()
 end
 
 function Game:getSpawnLocation()
@@ -223,12 +244,13 @@ function love.update(dt)
 
     if catCount == 0 and Game.lives > 0 then
         -- reward with 100 points for every rescued cat
-        print("Level " .. Game.level .. ": saved " .. Game.numSaved .. " cats")
-        Game.score = Game.score + 100*Game.numSaved
+        if Game.numSaved > 0 then
+            print("Level " .. Game.level .. ": saved " .. Game.numSaved .. " cats")
+            Game.score = Game.score + 100*Game.numSaved
+            Game.level = Game.level + 1
+            Game:flashLevel()
+        end
         Game.numSaved = 0
-
-        Game.level = Game.level + 1
-        Game.levelDisplayTime = Game.metronome.interval*(8 - (Game.metronome.beat % 4))
 
         Game.bonusLife = Game.lives < 9 and Game.level % 5 == 0
         if Game.bonusLife then
@@ -400,7 +422,9 @@ function love.draw()
             end
         elseif Game.lives == 0 then
             love.graphics.setColor(palette.cyan)
-            printCentered('Game Over', 0, 97, 320)
+            if gameCount ~= 0 then
+                printCentered('Game Over', 0, 97, 320)
+            end
             printCentered("High Score " .. config.highscore, 0, 105, 320)
         end
     end)

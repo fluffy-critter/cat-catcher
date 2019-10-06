@@ -32,6 +32,8 @@ function bgm:start()
         print(k,sound:tell(),sound:getDuration())
         self.volumes[k] = 0
     end
+
+    self:update(0)
 end
 
 function bgm:update(dt)

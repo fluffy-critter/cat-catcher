@@ -17,7 +17,7 @@ NAME=CATcher
 BUNDLE_ID=biz.beesbuzz.CATcher
 
 # LOVE version to fetch and build against
-LOVE_VERSION=11.1
+LOVE_VERSION=11.2
 
 # Version of the game - whenever this changes, set a tag for v$(BASEVERSION) for the revision base
 BASEVERSION=1.3.2
