@@ -204,7 +204,7 @@ $(DEST)/win64/$(NAME).exe: $(WIN64_EXE) $(DEST)/love/$(NAME).love
 	cp -r $(wildcard $(WIN64_ROOT)/*.dll) $(DEST)/win64
 	cat $(^) > $(@)
 
-WIN32_BUNDLE_FILENAME=refactor-win32-$(GAME_VERSION).zip
+WIN32_BUNDLE_FILENAME=catcher-win32-$(GAME_VERSION).zip
 bundle-win32: $(DEST)/$(WIN32_BUNDLE_FILENAME)
 $(DEST)/$(WIN32_BUNDLE_FILENAME): win32
 	cd $(DEST)/win32 && zip -9r ../$(WIN32_BUNDLE_FILENAME) *
