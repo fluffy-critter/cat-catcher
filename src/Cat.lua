@@ -141,8 +141,7 @@ function Cat:update(dt, game)
         -- collect powerups!
         util.runQueue(game.objects, function(obj)
             if self:collidesWith(obj.x, obj.y, obj.w, obj.h) then
-                obj:onCollect(self)
-                return true
+                return obj:onCollect(self)
             end
         end)
 

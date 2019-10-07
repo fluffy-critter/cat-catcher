@@ -26,7 +26,8 @@ function BoostPellet.new(o, Game)
         color = palette.yellow,
         lifetime = math.random(5,15),
         strength = math.random(50,100),
-        grabSound = soundpool.load('sound/pellet.ogg')
+        grabSound = soundpool.load('sound/pellet.ogg'),
+        age = 0
     })
 
     return self
@@ -34,13 +35,20 @@ end
 
 function BoostPellet:update(dt)
     self.lifetime = self.lifetime - dt
+    self.age = self.age + dt
     return self.lifetime <= 0
 end
 
 function BoostPellet:onCollect(cat)
+    -- only be collectible if it's appeared for at least 2 frames
+    if self.age <= 1/20 then
+        return false
+    end
+
     cat.vy = -math.abs(cat.vy) - self.strength
     soundpool.play(self.grabSound)
     self.game.score = self.game.score + 10
+    return true
 end
 
 function BoostPellet:draw()
