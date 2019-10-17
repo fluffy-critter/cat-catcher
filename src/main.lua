@@ -53,7 +53,8 @@ local GameDefaults = {
     nextLife = 1000,
     nextLifeIncr = 500,
     levelDisplayTime = 0,
-    numSaved = 0
+    numSaved = 0,
+    highScore = false
 }
 
 local Game = {
@@ -354,8 +355,9 @@ function love.update(dt)
         Game.nextLife = Game.nextLife + Game.nextLifeIncr
     end
 
-    if not config.highscore or Game.score > config.highscore then
+    if Game.score > (config.highscore or 0) then
         config.highscore = Game.score
+        Game.highScore = true
         config.save()
     end
 
@@ -403,7 +405,12 @@ function love.draw()
 
         love.graphics.setFont(font)
         love.graphics.setColor(palette.white)
-        love.graphics.print('Score: ' .. Game.score, 0, 1)
+        love.graphics.print('Score: ', 0, 1)
+        if Game.highScore then
+            love.graphics.setColor(palette.yellow)
+        end
+        love.graphics.print(Game.score, 7*8, 1)
+
         love.graphics.setColor(palette.lightred)
         love.graphics.printf('Lives: ' .. Game.lives, 0, 1, 320, "right")
         love.graphics.setColor(palette.red)
@@ -425,7 +432,13 @@ function love.draw()
             if gameCount ~= 0 then
                 printCentered('Game Over', 0, 97, 320)
             end
-            printCentered("High Score " .. config.highscore, 0, 105, 320)
+            if config.highscore then
+                printCentered("High Score " .. config.highscore, 0, 105, 320)
+                if Game.highScore then
+                    love.graphics.setColor(palette.white)
+                    printCentered("New High Score!", 0, 113, 320)
+                end
+            end
         end
     end)
 
